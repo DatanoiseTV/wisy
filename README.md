@@ -2,99 +2,135 @@
 
 # Wisy
 
-### A parametric visual design studio for the web, desktop & audio software UIs
+**A parametric visual design studio for the web, desktop and audio software UIs.**
 
-Design on a canvas. Export clean, valid, dependency‑free **HTML5 + CSS + JS**.
-No build step, no framework, no lock‑in.
+Design on a canvas. Export clean, valid, dependency-free HTML5, CSS and JavaScript.
+No build step, no framework, no lock-in.
 
-<img src="docs/screenshots/editor.png" alt="Wisy editor" width="100%" />
+<br/>
+
+<img src="docs/screenshots/editor.png" alt="The Wisy editor" width="100%" />
 
 </div>
 
----
+<br/>
 
-## Why Wisy
+## Overview
 
-Most visual builders ship bloated, unreadable markup you can never own. Wisy is built around one rule: **what you see on the canvas is exactly what you export** — because the editor and the export share the same renderer. The output is semantic HTML5, token‑driven CSS, and a tiny zero‑dependency runtime for the interactive widgets.
+Most visual builders produce bloated markup you can never own. Wisy is built on a single principle: the editor and the export share one renderer, so **what you see on the canvas is exactly what ships** — semantic HTML5, token-driven CSS, and a tiny zero-dependency runtime for the interactive elements.
 
-And it isn't only for marketing pages. The same engine builds **dashboards, mobile app screens, and audio software front‑ends** (JUCE WebView, plugin UIs) — with first‑class **knobs, sliders, XY pads, level meters, toggles and steppers** as real custom elements.
+It is not limited to marketing pages. The same engine builds dashboards, mobile screens, blogs, storefronts, and audio software front-ends, from a library of 56 parametric components and 32 ready-made templates.
 
-## Highlights
+<br/>
 
-- 🧩 **45 parametric components** — sections (navbar, hero, feature grid, stats, pricing, testimonial, CTA, footer), layout primitives, content, **media** (image, gallery + lightbox, video player, image frame), **music/artist** (audio player, release, tracklist, tour), forms incl. contact, mobile bars — each fully customizable.
-- 🎛️ **Audio‑grade UI widgets** — knob, slider (H/V), XY pad, level meter, toggle, stepper, rack panel. Real `<wisy-*>` custom elements, drag/scroll/keyboard interactive, shipped with your export.
-- 🎨 **37 token‑based themes + a parametric palette generator** — pick a harmony (complementary / analogous / triadic…), drag hue/saturation/contrast and the whole site **morphs live**, with **WCAG contrast checking** built in. Presets and the generator are independent: randomize colors while keeping a preset's typography.
-- 📱 **Real device presets** — iPhone, Pixel, Galaxy, iPad at exact logical sizes with correct aspect ratio and **constrained internal scroll** (1:1 at 100% zoom), plus fluid desktop/tablet/mobile breakpoints.
-- ▶️ **Try mode** — flip into an interactive preview where links, widgets, animations and scrolling behave like the real site, on any device.
-- ✨ **Animations** — entrance (fade / zoom / rise / blur / flip with direction, duration, delay, easing, scroll‑reveal or on‑load) and hover effects (lift / grow / sink / glow / tilt). Ships an `IntersectionObserver` runtime.
-- ✍️ **Pro editing** — drag‑to‑insert, drag‑to‑reorder, resize handles, **inline rich text** with a floating typography toolbar (bold/italic/underline/font/size/align), **structured list editors** (drag rows — no more `a|b|c`), **slider + scrub‑number** controls, graphical 3×3 **alignment pad**, layers tree, multi‑page projects, undo/redo, autosave.
-- 📦 **Clean export + project files** — pretty‑printed valid HTML per page + shared `styles.css` + `widgets.js`, packaged as a ZIP. Save/Open `.wisy.json` projects, live preview, and a syntax‑highlighted code viewer.
+## Start in three steps
 
-## Screenshots
+An optional setup wizard turns a purpose, a vibe and a brand color into a tailored starting point — with a live preview that updates as you choose. Skip it any time.
+
+<img src="docs/screenshots/wizard.png" alt="The Wisy start wizard with live preview" width="100%" />
+
+<br/>
+
+## A real color system, not guesswork
+
+Pick a brand color and Wisy builds a balanced, accessible palette in the OKLCH perceptual color space, with live WCAG contrast checks and color-wheel harmonies. Drag a slider and the entire design morphs in real time. Presets and the generator are independent: re-roll the colors while keeping a preset's typography.
+
+<img src="docs/screenshots/generator.png" alt="Parametric OKLCH palette generator" width="100%" />
+
+<br/>
+
+## Design for the device, at real size
+
+Switch between exact device presets — iPhone, Pixel, Galaxy, iPad — at their true logical dimensions and aspect ratios, with constrained internal scrolling, 1:1 at 100% zoom. Or work fluidly across desktop, tablet and mobile breakpoints. A Try mode runs the page like the real thing: links, widgets, animations and scrolling all live.
+
+<img src="docs/screenshots/device.png" alt="Real device presets in the editor" width="100%" />
+
+<br/>
+
+## Capabilities
+
+| | |
+|---|---|
+| **56 parametric components** | Sections, layout primitives, content, general UI (alerts, avatars, breadcrumbs, steps, timeline, progress, accordion), media, data charts, music, forms and mobile bars — each with a library of named style presets. |
+| **Data visualization** | Nine pure-SVG chart types (bar, line, area, pie, donut, sparkline, gauge, progress, radar), themed automatically. |
+| **Audio-grade controls** | Knob, slider, XY pad, level meter, toggle, stepper and rack panel as real custom elements, drag and scroll interactive, shipped with your export. |
+| **Pro editing** | Drag-to-insert and reorder, resize handles, inline rich text with a floating typography toolbar, structured list editors, slider and scrub-number controls, a graphical alignment pad, a visual gradient editor and a draggable image focus-point with crop. |
+| **Assets, fonts and icons** | A graphical icon browser (263 icons), a font browser (110 Google fonts with pairings and live preview), and an image picker with upload, keyword stock search and cropping. |
+| **Media embeds** | Paste a YouTube, Vimeo, Spotify, SoundCloud, Maps, Figma or CodePen link and get a responsive, privacy-respecting embed. |
+| **Motion** | Entrance, hover, scroll-driven (parallax, fade, zoom, rotate) and on-click effects, with a scroll-reveal runtime bundled into the export. |
+| **Themes** | 37 token-based themes spanning light and dark, serif and mono, sharp and rounded. |
+| **Projects** | Multi-page documents, undo/redo, autosave, and save/open of portable `.wisy.json` project files to hand off to a colleague. |
+
+<br/>
+
+## Templates
+
+Thirty-two starting points across marketing, app, e-commerce, industry, content, audio, mobile and utility — many shipping multiple core pages (Home, About, Pricing, Contact).
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/device.png" alt="Device presets in the editor" /><br/><sub><b>Real device presets</b> — exact phone sizes, constrained scroll</sub></td>
-    <td width="50%"><img src="docs/screenshots/generator.png" alt="Palette generator" /><br/><sub><b>Parametric palette generator</b> — harmony + live morph + contrast</sub></td>
+    <td width="50%"><img src="docs/screenshots/saas.png" alt="SaaS landing template" /></td>
+    <td width="50%"><img src="docs/screenshots/agency.png" alt="Agency template" /></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/saas.png" alt="SaaS landing template" /><br/><sub><b>SaaS landing</b></sub></td>
-    <td width="50%"><img src="docs/screenshots/agency.png" alt="Agency template" /><br/><sub><b>Agency</b> — bold dark</sub></td>
+    <td width="50%"><img src="docs/screenshots/dashboard.png" alt="Dashboard template" /></td>
+    <td width="50%"><img src="docs/screenshots/mixer.png" alt="Audio mixer template" /></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/dashboard.png" alt="Dashboard template" /><br/><sub><b>Dashboard</b> — app shell</sub></td>
-    <td width="50%"><img src="docs/screenshots/mixer.png" alt="Audio mixer template" /><br/><sub><b>Mixer</b> — audio console</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/plugin.png" alt="Audio plugin template" /><br/><sub><b>Synth plugin</b> — knobs, XY pad, meters</sub></td>
-    <td width="50%"><img src="docs/screenshots/musician.png" alt="Musician template" /><br/><sub><b>Musician</b> — player, tracklist, gallery, tour</sub></td>
+    <td width="50%"><img src="docs/screenshots/plugin.png" alt="Audio plugin template" /></td>
+    <td width="50%"><img src="docs/screenshots/musician.png" alt="Musician template" /></td>
   </tr>
 </table>
 
+<br/>
+
 ## Quick start
 
-No dependencies. Clone and serve the folder:
+No dependencies. Clone the repository and serve the folder:
 
 ```bash
 git clone https://github.com/DatanoiseTV/wisy.git
 cd wisy
 python3 -m http.server 5173      # or: npx serve .
-# open http://localhost:5173
 ```
 
-Drag components from the left, pick a template, tweak in the inspector, hit **Try** to test it, and **Export** when you're happy.
+Open `http://localhost:5173`, follow the wizard or pick a template, design in the inspector, press **Try** to test it, and **Export** when it is ready.
+
+<br/>
 
 ## Architecture
 
-Plain ES modules, zero runtime dependencies. The renderer is shared between the editor and the export, so the canvas is a faithful preview.
+Plain ES modules, zero runtime dependencies. The renderer is shared between the editor and the export, which makes the canvas a faithful preview rather than an approximation.
 
 | File | Responsibility |
 |------|----------------|
-| `src/state.js` | Document model, history/undo, pub‑sub store, device presets |
-| `src/registry.js` | Component definitions (schema + render → semantic HTML5) |
-| `src/render.js` | Node→DOM renderer, base + component CSS, responsive + animation CSS |
-| `src/widgets.js` | `<wisy-*>` custom elements + animation runtime (bundled into exports) |
-| `src/canvas.js` | Iframe canvas, selection, drag/drop, resize, zoom, device frames, Try mode |
-| `src/inspector.js` | Parametric property + style + animation editor (lists, sliders, align pad) |
-| `src/color.js` | HSL/contrast math + parametric palette generator |
-| `src/theme-editor.js` · `library.js` · `layers.js` · `pages.js` · `templates.js` · `textbar.js` · `dialog.js` | Panels, toolbars, dialogs |
-| `src/export.js` | HTML/CSS/JS generation, ZIP, preview, code view |
+| `src/state.js` | Document model, history and undo, pub/sub store, device presets |
+| `src/registry.js` | Component definitions — schema plus a render to semantic HTML5 |
+| `src/render.js` | Node-to-DOM renderer, base and component CSS, responsive and motion CSS |
+| `src/widgets.js` · `src/charts.js` | Interactive custom elements and runtimes, bundled into exports |
+| `src/canvas.js` | Iframe canvas, selection, drag and drop, resize, zoom, device frames, Try mode |
+| `src/inspector.js` | Parametric property and style editor: lists, sliders, pickers, gradient, alignment |
+| `src/color.js` | HSL and OKLCH math, WCAG contrast, the palette generator |
+| `src/pickers.js` | Icon, font, link and asset pickers, and the crop modal |
+| `src/wizard.js` · `src/theme-editor.js` · `src/templates.js` · `src/library.js` · `src/layers.js` · `src/pages.js` · `src/textbar.js` · `src/dialog.js` | Wizard, panels, toolbars and dialogs |
+| `src/export.js` | HTML, CSS and JavaScript generation, ZIP packaging, preview, code view |
+
+<br/>
 
 ## Exported output
 
 ```
 your-site/
-├── index.html        # + one file per extra page
-├── styles.css        # design tokens + components + widgets
-└── widgets.js         # interactive UI elements + scroll-reveal runtime
+  index.html      one file per page
+  styles.css      design tokens, components, widgets
+  widgets.js      interactive UI elements and scroll-reveal runtime
+  charts.js       chart custom element
 ```
 
-Open `index.html` directly or serve it — no build, no install.
+Open `index.html` directly or serve it. No build, no install.
 
-## Roadmap
-
-Active areas being expanded: OKLCH seed‑colour generation, scroll‑driven effects (parallax/scroll‑linked), graphical icon & font browsers, media‑service embeds with privacy options, local image upload/crop, and per‑component style‑preset libraries.
+<br/>
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE).
