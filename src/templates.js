@@ -261,6 +261,190 @@ export const TEMPLATES = [
       ])], { 'max-width': '420px', margin: '0 auto', 'box-shadow': 'var(--shadow-lg)', 'min-height': '100vh' }),
   },
   {
+    id: 'shop', name: 'Storefront', tag: 'Product grid', category: 'Ecommerce', theme: 'mint',
+    thumb: gthumb('#f5fbfa', '#0d9488', 'grid'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Folk', links: 'New, Women, Men, Sale', cta: 'Cart (2)', variant: 'solid' }),
+      comp('section', {}, { padding: '40px 24px 8px', 'align-items': 'center', gap: '6px' }, [
+        anim(comp('heading', { text: 'New arrivals', level: '1' }, { 'text-align': 'center' }), 'fade-up'),
+        comp('text', { text: 'Considered essentials, made to last.' }, { color: 'var(--color-muted)' }),
+      ]),
+      comp('section', {}, { padding: '24px', 'max-width': 'calc(var(--container) + 48px)', margin: '0 auto', width: '100%' }, [
+        comp('grid', { cols: 4 }, { 'grid-template-columns': 'repeat(4,minmax(0,1fr))', gap: '22px' },
+          [['Linen shirt', '$78'], ['Wool sweater', '$120'], ['Denim jacket', '$160'], ['Cotton tee', '$34'], ['Chino pant', '$92'], ['Knit beanie', '$28'], ['Leather belt', '$58'], ['Canvas tote', '$45']].map(([n, p]) => productCard(n, p))),
+      ]),
+      comp('cta', { title: 'Free shipping over $75', subtitle: 'Plus 30‑day easy returns.', button: 'Shop all' }),
+      comp('footer', { brand: 'Folk' }),
+    ]),
+  },
+  {
+    id: 'product', name: 'Product page', tag: 'Detail view', category: 'Ecommerce', theme: 'studio',
+    thumb: gthumb('#ffffff', '#5b8cff', 'split'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Folk', links: 'Shop, About, Journal', cta: 'Cart', variant: 'solid' }),
+      comp('section', {}, { padding: '48px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%' }, [
+        comp('row', {}, { gap: '40px', 'align-items': 'flex-start', 'flex-wrap': 'wrap' }, [
+          anim(comp('image', { alt: 'Product' }, { flex: '1', 'min-width': '280px', 'aspect-ratio': '1', 'border-radius': 'var(--radius-lg)' }), 'fade-right'),
+          anim(comp('stack', {}, { flex: '1', 'min-width': '280px', gap: '16px' }, [
+            comp('badge', { text: 'Bestseller', variant: 'soft' }, { 'align-self': 'flex-start' }),
+            comp('heading', { text: 'The Everyday Jacket', level: '1' }, { 'font-size': 'var(--fs-2xl)' }),
+            comp('heading', { text: '$160', level: '2' }, { 'font-size': 'var(--fs-xl)', color: 'var(--color-primary)' }),
+            comp('text', { text: 'A weather‑ready layer in waxed organic cotton. Cut for movement, built to age beautifully.' }, { color: 'var(--color-muted)' }),
+            comp('list', { items: 'Waxed organic cotton\nYKK hardware\nMade in Portugal\nFree returns', marker: 'check' }),
+            comp('row', {}, { gap: '10px' }, [comp('button', { text: 'Add to cart', variant: 'primary', size: 'lg' }), comp('button', { text: 'Save', variant: 'outline', size: 'lg' })]),
+          ]), 'fade-left', 120),
+        ]),
+      ]),
+      comp('footer', { brand: 'Folk' }),
+    ]),
+  },
+  {
+    id: 'restaurant', name: 'Restaurant', tag: 'Hospitality', category: 'Industry', theme: 'sand',
+    thumb: gthumb('#fbf9f4', '#a16207', 'hero'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Maison', links: 'Menu, Story, Visit', cta: 'Reserve', variant: 'minimal' }),
+      comp('hero', { eyebrow: 'Est. 1998', title: 'Seasonal plates, honest fire', subtitle: 'A neighbourhood kitchen sourcing within 50 miles. Walk‑ins welcome; bookings recommended.', primary: 'Book a table', secondary: 'See the menu', variant: 'plain', align: 'left' }),
+      comp('section', {}, { padding: '56px 24px', 'max-width': '760px', margin: '0 auto', width: '100%', gap: '10px', 'align-items': 'stretch' }, [
+        anim(comp('heading', { text: 'This week', level: '2' }, { 'margin-bottom': '8px' }), 'fade-up'),
+        menuItem('Charred leeks, hazelnut, brown butter', '14'),
+        menuItem('Hand‑rolled cavatelli, nduja, pecorino', '21'),
+        menuItem('Whole plaice, capers, sea herbs', '28'),
+        menuItem('Burnt honey tart, crème fraîche', '11'),
+      ]),
+      comp('stat', { items: 'Tue–Sun|Open\n5–11pm|Dinner\n50mi|Sourcing\n4.8★|Rating' }, { 'background-color': 'var(--color-surface)' }),
+      comp('cta', { title: 'Join us this weekend', subtitle: 'Tables open 30 days out.', button: 'Reserve' }),
+      comp('footer', { brand: 'Maison', tagline: 'Open Tuesday to Sunday.' }),
+    ]),
+  },
+  {
+    id: 'gym', name: 'Fitness', tag: 'Gym / studio', category: 'Industry', theme: 'neon',
+    thumb: gthumb('#0a0612', '#d946ef', 'hero', true),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'PULSE', links: 'Classes, Coaches, Plans', cta: 'Join now', variant: 'glass' }),
+      (() => { const hh = comp('hero', { eyebrow: 'Train with intent', title: 'Stronger every single session', subtitle: 'Coached strength, conditioning and recovery — programmed for real progress.', primary: 'Start 7‑day trial', secondary: 'View classes', variant: 'spotlight' }); hh.anim = { type: 'fade-up', duration: 700, trigger: 'load' }; return hh; })(),
+      animAll(comp('feature', { title: 'Classes', cols: 4, items: 'zap|Power|Barbell strength.\nbolt|HIIT|Engine work.\nheart|Mobility|Move better.\nrocket|Sprint|All‑out intervals.' })),
+      comp('pricing', { plans: 'Drop‑in|$22|Single class;Book anytime\nMonthly|$129|Unlimited classes;Free assessment;App access\nAnnual|$1190|Everything monthly;2 PT sessions;Priority booking', featured: 2 }),
+      comp('cta', { title: 'Your first week is on us', button: 'Claim trial' }),
+      comp('footer', { brand: 'PULSE' }),
+    ]),
+  },
+  {
+    id: 'realestate', name: 'Real estate', tag: 'Listings', category: 'Industry', theme: 'slate',
+    thumb: gthumb('#f8fafc', '#0284c7', 'grid'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Harbor', links: 'Buy, Rent, Sell, Agents', cta: 'List property', variant: 'solid' }),
+      comp('section', {}, { padding: '56px 24px 24px', 'align-items': 'center', gap: '10px' }, [
+        anim(comp('heading', { text: 'Find your next address', level: '1' }, { 'text-align': 'center' }), 'fade-up'),
+        comp('text', { text: 'Curated homes across the harbor district.' }, { color: 'var(--color-muted)' }),
+      ]),
+      comp('section', {}, { padding: '8px 24px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%' }, [
+        comp('grid', { cols: 3 }, { 'grid-template-columns': 'repeat(3,minmax(0,1fr))', gap: '22px' },
+          [['$845,000', '12 Marina Way · 3bd 2ba'], ['$1,250,000', '8 Pier Lane · 4bd 3ba'], ['$640,000', '44 Quay St · 2bd 1ba'], ['$2,100,000', '1 Lighthouse Rd · 5bd 4ba'], ['$520,000', '90 Dock Ave · 2bd 2ba'], ['$975,000', '7 Anchor Ct · 3bd 3ba']].map(([p, a]) => listingCard(p, a))),
+      ]),
+      comp('footer', { brand: 'Harbor' }),
+    ]),
+  },
+  {
+    id: 'clinic', name: 'Clinic', tag: 'Healthcare', category: 'Industry', theme: 'arctic',
+    thumb: gthumb('#f4fafe', '#0891b2', 'hero'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Wellpath', links: 'Services, Team, Patients', cta: 'Book visit', variant: 'solid' }),
+      comp('hero', { eyebrow: 'Accepting new patients', title: 'Care that listens first', subtitle: 'Primary and preventive care for the whole family, with same‑week appointments.', primary: 'Book appointment', secondary: 'Our services', variant: 'gradient' }),
+      animAll(comp('feature', { title: 'Services', items: 'shield|Primary care|Annual checks and screening.\nheart|Pediatrics|Care from day one.\nbolt|Urgent visits|Same‑week slots.' })),
+      comp('stat', { items: '25k+|Patients\n4.9★|Rating\n<3d|Wait time\n12|Specialists' }, { 'background-color': 'var(--color-surface)' }),
+      comp('testimonial', { quote: 'The first practice that didn’t rush me. Genuinely felt heard.', author: 'Dana R.', role: 'Patient since 2021' }),
+      comp('cta', { title: 'Same‑week appointments available', button: 'Book now' }),
+      comp('footer', { brand: 'Wellpath' }),
+    ]),
+  },
+  {
+    id: 'course', name: 'Online course', tag: 'Education', category: 'Content', theme: 'grape',
+    thumb: gthumb('#faf8ff', '#7c3aed', 'hero'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'Craft', links: 'Curriculum, Reviews, FAQ', cta: 'Enroll', variant: 'glass' }),
+      comp('hero', { eyebrow: 'New cohort · June', title: 'Master product design in 8 weeks', subtitle: 'Live workshops, real critique, and a portfolio you’ll be proud to ship.', primary: 'Enroll now', secondary: 'Syllabus', variant: 'gradient' }),
+      animAll(comp('feature', { title: 'What you’ll build', cols: 4, items: 'layers|Foundations|Type, color, grid.\nbolt|Systems|Tokens & components.\nrocket|Product|End‑to‑end flows.\nstar|Portfolio|3 case studies.' })),
+      comp('pricing', { plans: 'Self‑paced|$199|Lifetime access;Community\nCohort|$899|Live workshops;Critique;Certificate;Community\nTeam|$2400|5 seats;Private cohort;Reporting', featured: 2 }),
+      comp('testimonial', { quote: 'I changed careers within three months of finishing. Worth every hour.', author: 'Priya N.', role: 'Now Product Designer @ Lumen' }),
+      comp('footer', { brand: 'Craft' }),
+    ]),
+  },
+  {
+    id: 'photography', name: 'Photography', tag: 'Gallery', category: 'Content', theme: 'paper',
+    thumb: gthumb('#ffffff', '#9a3412', 'grid'),
+    build: () => pageRoot([
+      comp('section', {}, { padding: '56px 24px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%', gap: '8px', 'align-items': 'flex-start' }, [
+        anim(comp('heading', { text: 'Elena Voss', level: '1' }, { 'font-size': 'var(--fs-3xl)' }), 'fade-up'),
+        comp('text', { text: 'Documentary & landscape photography. Selected work, 2019–2025.' }, { color: 'var(--color-muted)' }),
+      ]),
+      comp('section', {}, { padding: '16px 24px 40px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%' }, [
+        comp('grid', { cols: 3 }, { 'grid-template-columns': 'repeat(3,minmax(0,1fr))', gap: '12px' },
+          [4 / 5, 1, 4 / 5, 4 / 5, 1, 4 / 5, 1, 4 / 5, 1].map((ar, i) => anim(comp('image', { alt: 'Photograph ' + (i + 1) }, { 'aspect-ratio': String(ar), 'border-radius': '2px' }), 'fade', i * 40))),
+      ]),
+      comp('footer', { brand: 'Elena Voss', tagline: 'Available for commissions.', cols: 'Work: Series, Prints, Commissions | Contact: Email, Instagram' }),
+    ]),
+  },
+  {
+    id: 'podcast', name: 'Podcast', tag: 'Show page', category: 'Content', theme: 'midnight',
+    thumb: gthumb('#070b14', '#3b82f6', 'list', true),
+    build: () => pageRoot([
+      comp('section', {}, { padding: '56px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%' }, [
+        comp('row', {}, { gap: '28px', 'align-items': 'center', 'flex-wrap': 'wrap' }, [
+          anim(comp('image', { alt: 'Cover' }, { width: '180px', height: '180px', 'border-radius': 'var(--radius-lg)' }), 'zoom-in'),
+          comp('stack', {}, { gap: '12px', flex: '1', 'min-width': '260px' }, [
+            comp('badge', { text: 'New episode weekly', variant: 'soft' }, { 'align-self': 'flex-start' }),
+            comp('heading', { text: 'Signal & Noise', level: '1' }),
+            comp('text', { text: 'Conversations with builders about the craft behind the product.' }, { color: 'var(--color-muted)' }),
+            comp('row', {}, { gap: '10px' }, [comp('button', { text: 'Listen on Spotify', variant: 'primary' }), comp('button', { text: 'Apple Podcasts', variant: 'outline' })]),
+          ]),
+        ]),
+      ]),
+      comp('section', {}, { padding: '0 24px 48px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%', gap: '10px', 'align-items': 'stretch' }, [
+        comp('heading', { text: 'Episodes', level: '2' }, { 'margin-bottom': '6px' }),
+        episodeRow('42', 'Designing for trust', '58 min'),
+        episodeRow('41', 'The cost of complexity', '1h 04m'),
+        episodeRow('40', 'Shipping under constraint', '47 min'),
+        episodeRow('39', 'Taste, and how to build it', '52 min'),
+      ]),
+      comp('footer', { brand: 'Signal & Noise' }),
+    ]),
+  },
+  {
+    id: 'article', name: 'Article', tag: 'Long‑form', category: 'Content', theme: 'paper',
+    thumb: gthumb('#ffffff', '#9a3412', 'article'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'The Dispatch', links: 'Latest, Culture, Tech', cta: 'Subscribe', variant: 'minimal' }),
+      comp('section', {}, { padding: '48px 24px', 'max-width': '720px', margin: '0 auto', width: '100%', gap: '20px', 'align-items': 'stretch' }, [
+        comp('badge', { text: 'Essay', variant: 'soft' }, { 'align-self': 'flex-start' }),
+        comp('heading', { text: 'The quiet power of constraints', level: '1' }, { 'font-size': 'var(--fs-3xl)' }),
+        comp('text', { text: 'By Jordan Avery · 8 min read · May 2025' }, { color: 'var(--color-muted)', margin: '0' }),
+        comp('image', { alt: 'Cover' }, { 'aspect-ratio': '16/9', 'border-radius': '4px' }),
+        comp('text', { text: 'We tend to romanticize freedom in creative work. But the most memorable work is almost always born from limits — of time, budget, palette, or scope.' }, { 'font-size': '1.15rem' }),
+        comp('heading', { text: 'Less surface, more depth', level: '2' }),
+        comp('text', { text: 'When everything is possible, nothing is urgent. A constraint converts an open field into a path. It tells you where to push and where to let go.' }),
+        comp('testimonial', { quote: 'Art lives from constraints and dies from freedom.', author: 'Leonardo da Vinci', role: '' }),
+        comp('text', { text: 'The lesson for product teams is not to manufacture artificial scarcity, but to name the real constraints early — and design proudly within them.' }),
+      ]),
+      comp('footer', { brand: 'The Dispatch' }),
+    ]),
+  },
+  {
+    id: 'event', name: 'Conference', tag: 'Event', category: 'Marketing', theme: 'royal',
+    thumb: gthumb('#0a0f1f', '#4f6ef0', 'hero', true),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'SHIFT ’26', links: 'Speakers, Schedule, Venue', cta: 'Get tickets', variant: 'glass' }),
+      (() => { const hh = comp('hero', { eyebrow: 'Sept 18–20 · Lisbon', title: 'The conference for people who build', subtitle: 'Three days of talks, workshops and late‑night hallway tracks.', primary: 'Get tickets', secondary: 'View schedule', variant: 'gradient' }); hh.anim = { type: 'fade-up', duration: 700, trigger: 'load' }; return hh; })(),
+      comp('section', {}, { padding: '64px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%', gap: '32px' }, [
+        anim(comp('heading', { text: 'Speakers', level: '2' }, { 'text-align': 'center' }), 'fade-up'),
+        comp('grid', { cols: 4 }, { 'grid-template-columns': 'repeat(4,minmax(0,1fr))', gap: '20px' },
+          [['Ada Vance', 'Stripe'], ['Kai Moreno', 'Linear'], ['Noor Patel', 'Figma'], ['Sven Holt', 'Vercel']].map(([n, r]) => speakerCard(n, r))),
+      ]),
+      comp('pricing', { plans: 'Early bird|$299|Sold out;—\nStandard|$449|All talks;Workshops;Party\nVIP|$799|Front row;Speaker dinner;Lounge', featured: 2 }),
+      comp('cta', { title: 'Lisbon, this September', subtitle: 'Limited tickets remaining.', button: 'Get tickets' }),
+      comp('footer', { brand: 'SHIFT ’26' }),
+    ]),
+  },
+  {
     id: 'blank', name: 'Blank', tag: 'Start fresh', category: 'Blank', theme: null,
     thumb: thumbBlank(),
     build: () => pageRoot([
@@ -323,13 +507,53 @@ function stepRow(lbl) {
     ...pat.map((on) => comp('toggle', { label: '', on: !!on, color: 'var(--color-accent)' })),
   ]);
 }
+function productCard(name, price) {
+  return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
+    comp('image', { alt: name }, { 'border-radius': '0', 'aspect-ratio': '4/5' }),
+    comp('stack', {}, { padding: '14px', gap: '4px' }, [
+      comp('heading', { text: name, level: '4' }, { 'font-size': '1rem' }),
+      comp('text', { text: price }, { color: 'var(--color-primary)', 'font-weight': '600', margin: '0' }),
+    ]),
+  ]), 'fade-up');
+}
+function listingCard(price, addr) {
+  return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
+    comp('image', { alt: addr }, { 'border-radius': '0', 'aspect-ratio': '3/2' }),
+    comp('stack', {}, { padding: '16px', gap: '6px' }, [
+      comp('heading', { text: price, level: '3' }, { 'font-size': '1.3rem' }),
+      comp('text', { text: addr }, { color: 'var(--color-muted)', 'font-size': '.9rem', margin: '0' }),
+      comp('badge', { text: 'For sale', variant: 'soft' }, { 'align-self': 'flex-start', 'margin-top': '4px' }),
+    ]),
+  ]), 'fade-up');
+}
+function menuItem(name, price) {
+  return comp('row', {}, { 'align-items': 'baseline', gap: '12px', 'border-bottom': '1px solid var(--color-border)', padding: '12px 0', 'flex-wrap': 'nowrap' }, [
+    comp('heading', { text: name, level: '4' }, { 'font-size': '1.05rem', 'font-weight': '500', flex: '1' }),
+    comp('heading', { text: price, level: '4' }, { 'font-size': '1.05rem', color: 'var(--color-primary)' }),
+  ]);
+}
+function episodeRow(n, title, dur) {
+  return comp('row', {}, { 'align-items': 'center', gap: '14px', padding: '14px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'flex-wrap': 'nowrap' }, [
+    comp('heading', { text: n, level: '4' }, { 'font-size': '1.1rem', color: 'var(--color-muted)', width: '36px' }),
+    comp('icon', { glyph: 'music', size: 22 }, { color: 'var(--color-primary)' }),
+    comp('heading', { text: title, level: '4' }, { 'font-size': '1rem', 'font-weight': '500', flex: '1' }),
+    comp('text', { text: dur }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
+  ]);
+}
+function speakerCard(name, org) {
+  return anim(comp('card', {}, { 'align-items': 'center', gap: '10px', 'text-align': 'center' }, [
+    comp('icon', { glyph: 'star', size: 30 }, { width: '64px', height: '64px', 'border-radius': '50%', background: 'color-mix(in srgb,var(--color-primary) 16%,transparent)', color: 'var(--color-primary)' }),
+    comp('heading', { text: name, level: '4' }, { 'font-size': '1.05rem' }),
+    comp('text', { text: org }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
+  ]), 'fade-up');
+}
 
 /* ---- compact thumbnail generator ---- */
 function gthumb(bg, accent, kind, dark) {
   const muted = dark ? '#2a2a30' : 'rgba(120,130,150,.25)';
   const card = dark ? '#16161c' : 'rgba(255,255,255,.9)';
   const txt = dark ? '#e8e8ee' : '#10141b';
-  const parts = { hero: heroTh, card: cardTh, dash: dashTh, strip: stripTh, pads: padsTh, phone: phoneTh, split: splitTh };
+  const parts = { hero: heroTh, card: cardTh, dash: dashTh, strip: stripTh, pads: padsTh, phone: phoneTh, split: splitTh, grid: gridTh, list: listTh, article: articleTh };
   return svg(`<rect width="200" height="110" fill="${bg}"/>` + (parts[kind] || heroTh)(accent, muted, card, txt));
   function heroTh(a, m, c, t) { return `<rect x="14" y="10" width="40" height="6" rx="2" fill="${t}"/><rect x="150" y="9" width="34" height="8" rx="4" fill="${a}"/><rect x="50" y="34" width="100" height="9" rx="3" fill="${t}"/><rect x="50" y="47" width="100" height="9" rx="3" fill="${t}"/><rect x="74" y="64" width="52" height="9" rx="4" fill="${a}"/><rect x="20" y="84" width="50" height="20" rx="4" fill="${c}"/><rect x="75" y="84" width="50" height="20" rx="4" fill="${c}"/><rect x="130" y="84" width="50" height="20" rx="4" fill="${c}"/>`; }
   function cardTh(a, m, c, t) { return `<rect x="62" y="26" width="76" height="58" rx="8" fill="${c}" stroke="${m}"/><circle cx="100" cy="40" r="6" fill="${a}"/><rect x="74" y="52" width="52" height="6" rx="3" fill="${t}"/><rect x="74" y="63" width="52" height="6" rx="3" fill="${m}"/><rect x="74" y="73" width="52" height="7" rx="3" fill="${a}"/>`; }
@@ -338,9 +562,12 @@ function gthumb(bg, accent, kind, dark) {
   function padsTh(a, m, c, t) { let s = ''; for (let r = 0; r < 4; r++)for (let i = 0; i < 8; i++) { const on = (r === 2) || (r === 0 && i % 4 === 0) || (r === 1 && (i === 2 || i === 6)); s += `<rect x="${24 + i * 19}" y="${24 + r * 20}" width="14" height="14" rx="3" fill="${on ? a : c}" stroke="${m}"/>`; } return s; }
   function phoneTh(a, m, c, t) { return `<rect x="74" y="6" width="52" height="98" rx="9" fill="${c}" stroke="${m}"/><circle cx="100" cy="34" r="11" fill="${a}"/><rect x="84" y="52" width="32" height="6" rx="3" fill="${t}"/><rect x="86" y="63" width="28" height="4" rx="2" fill="${m}"/><rect x="84" y="86" width="32" height="9" rx="4" fill="${a}"/>`; }
   function splitTh(a, m, c, t) { return `<rect x="14" y="30" width="52" height="60" rx="6" fill="${c}" stroke="${m}"/><rect x="74" y="22" width="52" height="68" rx="6" fill="${c}" stroke="${a}" stroke-width="2"/><rect x="134" y="30" width="52" height="60" rx="6" fill="${c}" stroke="${m}"/><rect x="86" y="34" width="28" height="6" rx="3" fill="${a}"/>`; }
+  function gridTh(a, m, c, t) { let s = `<rect x="14" y="10" width="34" height="6" rx="2" fill="${a}"/>`; for (let r = 0; r < 2; r++)for (let i = 0; i < 4; i++) { const x = 14 + i * 45, y = 26 + r * 42; s += `<rect x="${x}" y="${y}" width="38" height="26" rx="4" fill="${c}" stroke="${m}"/><rect x="${x + 4}" y="${y + 18}" width="20" height="4" rx="2" fill="${a}"/>`; } return s; }
+  function listTh(a, m, c, t) { let s = `<rect x="14" y="12" width="172" height="30" rx="6" fill="${c}" stroke="${m}"/><circle cx="30" cy="27" r="9" fill="${a}"/>`; for (let i = 0; i < 3; i++) { const y = 50 + i * 18; s += `<rect x="14" y="${y}" width="172" height="14" rx="4" fill="${c}" stroke="${m}"/><circle cx="24" cy="${y + 7}" r="4" fill="${a}"/><rect x="34" y="${y + 5}" width="80" height="4" rx="2" fill="${t}"/>`; } return s; }
+  function articleTh(a, m, c, t) { return `<rect x="58" y="12" width="84" height="8" rx="2" fill="${t}"/><rect x="58" y="26" width="50" height="4" rx="2" fill="${m}"/><rect x="58" y="36" width="84" height="28" rx="4" fill="${c}" stroke="${m}"/><rect x="58" y="70" width="84" height="4" rx="2" fill="${m}"/><rect x="58" y="78" width="84" height="4" rx="2" fill="${m}"/><rect x="58" y="86" width="60" height="4" rx="2" fill="${m}"/>`; }
 }
 
-const TPL_CATS = ['All', 'Marketing', 'App', 'Audio', 'Mobile', 'Utility', 'Blank'];
+const TPL_CATS = ['All', 'Marketing', 'App', 'Ecommerce', 'Industry', 'Content', 'Audio', 'Mobile', 'Utility', 'Blank'];
 
 export function initTemplatesPanel() {
   const host = document.getElementById('panel-templates');

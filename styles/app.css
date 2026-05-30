@@ -402,7 +402,8 @@ select.ctl { appearance: none; background-image: url("data:image/svg+xml,%3Csvg 
 /* theme popover */
 .theme-pop { position: fixed; z-index: 90; width: 300px; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-3); overflow: hidden; }
 .theme-pop[hidden] { display: none; }
-.theme-pop__head { padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--txt-2); }
+.theme-pop__head { padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--txt-2); display: flex; align-items: baseline; gap: 8px; }
+.theme-pop__hint { font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--txt-3); margin-left: auto; }
 .theme-pop__body { padding: 12px 14px; max-height: 60vh; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
 .theme-presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
 .theme-preset { border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; cursor: pointer; transition: all .14s; background: var(--bg-2); }

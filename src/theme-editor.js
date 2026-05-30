@@ -1,10 +1,14 @@
 /* ============================================================
-   Theme editor — presets + live token editing. Anchored popover.
+   Theme editor — presets + live token editing. Anchored popover
+   that STAYS OPEN while you experiment (build-once + in-place
+   sync; clicks inside never bubble to the outside-close handler).
    ============================================================ */
 import { store } from './state.js';
 import { THEME_PRESETS, TOKEN_SCHEMA, DEFAULT_TOKENS, FONT_OPTIONS } from './themes.js';
 
 let pop, btn, open = false;
+let updaters = [];     // in-place field refreshers
+let presetEls = [];    // preset card elements for highlight
 
 export function initThemeEditor() {
   btn = document.getElementById('btn-theme');
@@ -12,9 +16,13 @@ export function initThemeEditor() {
   pop.className = 'theme-pop';
   pop.hidden = true;
   document.body.append(pop);
+  // keep all interaction inside the popover from triggering the outside-close
+  pop.addEventListener('pointerdown', (e) => e.stopPropagation());
+  pop.addEventListener('click', (e) => e.stopPropagation());
   btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
-  document.addEventListener('click', (e) => { if (open && !pop.contains(e.target) && e.target !== btn) close(); });
-  store.on('theme:change', () => { if (open) renderBody(); });
+  document.addEventListener('click', () => { if (open) close(); });
+  document.addEventListener('keydown', (e) => { if (open && e.key === 'Escape') close(); });
+  store.on('theme:change', () => { if (open) syncAll(); });
 }
 
 function toggle() { open ? close() : show(); }
@@ -23,30 +31,35 @@ function show() {
   open = true; pop.hidden = false;
   const r = btn.getBoundingClientRect();
   pop.style.top = (r.bottom + 8) + 'px';
-  pop.style.left = Math.min(r.left, window.innerWidth - 320) + 'px';
-  renderBody();
+  pop.style.left = Math.min(r.left, window.innerWidth - 316) + 'px';
+  build();
 }
 
-function renderBody() {
-  pop.innerHTML = `<div class="theme-pop__head">Theme</div><div class="theme-pop__body"></div>`;
+function curTok(key) { return (store.doc.themeTokens?.[key]) ?? DEFAULT_TOKENS[key]; }
+function setTok(key, v) { store.setTheme({ [key]: v }); store.emit('render'); syncPresetHighlight(); }
+function applyPreset(p) {
+  store.transaction(() => { store.doc.themeId = p.id; store.doc.themeTokens = { ...p.tokens }; });
+  store.emit('theme:change'); store.emit('render');
+  syncAll();
+}
+
+function build() {
+  updaters = []; presetEls = [];
+  pop.innerHTML = `<div class="theme-pop__head">Theme <span class="theme-pop__hint">click to try · stays open</span></div><div class="theme-pop__body"></div>`;
   const body = pop.querySelector('.theme-pop__body');
 
-  // presets
+  body.append(labelEl(`Presets · ${THEME_PRESETS.length}`));
   const presets = document.createElement('div'); presets.className = 'theme-presets';
   THEME_PRESETS.forEach((p) => {
     const el = document.createElement('div');
     el.className = 'theme-preset' + (store.doc.themeId === p.id ? ' is-active' : '');
+    el.dataset.id = p.id;
     el.innerHTML = `<div class="theme-preset__sw">${p.swatches.map((c) => `<span style="background:${c}"></span>`).join('')}</div><div class="theme-preset__name">${p.name}</div>`;
-    el.onclick = () => {
-      store.transaction(() => { store.doc.themeId = p.id; store.doc.themeTokens = { ...p.tokens }; });
-      store.emit('theme:change'); store.emit('render');
-      renderBody();
-    };
-    presets.append(el);
+    el.onclick = () => applyPreset(p);
+    presets.append(el); presetEls.push(el);
   });
-  body.append(labelEl('Presets'), presets);
+  body.append(presets);
 
-  // token fields
   TOKEN_SCHEMA.forEach((grp) => {
     body.append(labelEl(grp.group));
     const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;flex-direction:column;gap:8px';
@@ -56,8 +69,8 @@ function renderBody() {
 }
 function labelEl(t) { const d = document.createElement('div'); d.style.cssText = 'font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-3);margin-top:4px'; d.textContent = t; return d; }
 
-function curTok(key) { return (store.doc.themeTokens?.[key]) ?? DEFAULT_TOKENS[key]; }
-function setTok(key, v) { store.setTheme({ [key]: v }); store.emit('render'); }
+function syncPresetHighlight() { presetEls.forEach((el) => el.classList.toggle('is-active', el.dataset.id === store.doc.themeId)); }
+function syncAll() { updaters.forEach((fn) => fn()); syncPresetHighlight(); }
 
 function tokenField(f) {
   const row = document.createElement('div'); row.style.cssText = 'display:grid;grid-template-columns:74px 1fr;align-items:center;gap:8px';
@@ -72,17 +85,21 @@ function tokenField(f) {
     picker.addEventListener('input', () => { txt.value = picker.value; fill.style.background = picker.value; setTok(f.key, picker.value); });
     txt.addEventListener('change', () => { fill.style.background = txt.value; const h = hex(txt.value); if (h) picker.value = h; setTok(f.key, txt.value); });
     sw.append(fill, picker); ctl.append(sw, txt);
+    updaters.push(() => { const v = curTok(f.key); fill.style.background = v; txt.value = v; picker.value = hex(v); });
   } else if (f.type === 'select') {
     ctl = document.createElement('select'); ctl.className = 'ctl';
     f.options.forEach((o) => { const op = document.createElement('option'); op.value = o; op.textContent = o; ctl.append(op); });
     ctl.value = curTok(f.key); ctl.addEventListener('change', () => setTok(f.key, ctl.value));
+    updaters.push(() => { ctl.value = curTok(f.key); });
   } else if (f.type === 'font') {
     ctl = document.createElement('select'); ctl.className = 'ctl';
     FONT_OPTIONS.forEach((o) => { const op = document.createElement('option'); op.value = `'${o}', sans-serif`; op.textContent = o; ctl.append(op); });
     ctl.value = curTok(f.key); ctl.addEventListener('change', () => setTok(f.key, ctl.value));
+    updaters.push(() => { ctl.value = curTok(f.key); });
   } else {
     ctl = document.createElement('input'); ctl.className = 'ctl'; ctl.value = curTok(f.key);
     ctl.addEventListener('change', () => setTok(f.key, ctl.value));
+    updaters.push(() => { ctl.value = curTok(f.key); });
   }
   row.append(l, ctl);
   return row;

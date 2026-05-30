@@ -131,6 +131,150 @@ export const THEME_PRESETS = [
       'scale': '1.25', 'radius': '12px', 'radius-lg': '20px',
     },
   },
+  {
+    id: 'forest', name: 'Forest', tag: 'Natural · light',
+    swatches: ['#2f855a', '#b45309', '#f6faf7'],
+    tokens: {
+      'color-bg': '#f6faf7', 'color-surface': '#eaf3ed', 'color-surface-2': '#dcebe1',
+      'color-text': '#34433b', 'color-muted': '#6b7d72', 'color-strong': '#13241b', 'color-border': '#d4e4da',
+      'color-primary': '#2f855a', 'color-accent': '#b45309', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Sora', system-ui, sans-serif", 'radius': '12px', 'radius-lg': '20px',
+    },
+  },
+  {
+    id: 'sunset', name: 'Sunset', tag: 'Warm · dark',
+    swatches: ['#fb7185', '#f59e0b', '#1a1020'],
+    tokens: {
+      'color-bg': '#160e1c', 'color-surface': '#221531', 'color-surface-2': '#2e1d40',
+      'color-text': '#d8c7dd', 'color-muted': '#9a86a3', 'color-strong': '#fdf2f8', 'color-border': '#352447',
+      'color-primary': '#fb7185', 'color-accent': '#f59e0b', 'color-primary-contrast': '#1a1020',
+      'font-display': "'Outfit', system-ui, sans-serif", 'radius': '14px', 'radius-lg': '22px',
+      'shadow-lg': '0 18px 60px rgba(251,113,133,.22)',
+    },
+  },
+  {
+    id: 'grape', name: 'Grape', tag: 'Playful · light',
+    swatches: ['#7c3aed', '#db2777', '#faf8ff'],
+    tokens: {
+      'color-bg': '#faf8ff', 'color-surface': '#f2ecff', 'color-surface-2': '#e7dcff',
+      'color-text': '#403a4d', 'color-muted': '#766d87', 'color-strong': '#1e1530', 'color-border': '#e3d8f5',
+      'color-primary': '#7c3aed', 'color-accent': '#db2777', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Plus Jakarta Sans', system-ui, sans-serif", 'radius': '16px', 'radius-lg': '26px',
+    },
+  },
+  {
+    id: 'slate', name: 'Slate', tag: 'Corporate · cool',
+    swatches: ['#475569', '#0284c7', '#f8fafc'],
+    tokens: {
+      'color-bg': '#f8fafc', 'color-surface': '#f1f5f9', 'color-surface-2': '#e2e8f0',
+      'color-text': '#334155', 'color-muted': '#64748b', 'color-strong': '#0f172a', 'color-border': '#dbe2ea',
+      'color-primary': '#334155', 'color-accent': '#0284c7', 'color-primary-contrast': '#ffffff',
+      'font-display': "'IBM Plex Sans', system-ui, sans-serif", 'font-ui': "'IBM Plex Sans', system-ui, sans-serif",
+      'scale': '1.2', 'radius': '6px', 'radius-lg': '10px',
+    },
+  },
+  {
+    id: 'crimson', name: 'Crimson', tag: 'Bold · editorial',
+    swatches: ['#dc2626', '#171717', '#fffaf9'],
+    tokens: {
+      'color-bg': '#fffaf9', 'color-surface': '#fdeeec', 'color-surface-2': '#fbdedb',
+      'color-text': '#3a2a28', 'color-muted': '#82706d', 'color-strong': '#1a0f0e', 'color-border': '#f1d9d6',
+      'color-primary': '#dc2626', 'color-accent': '#171717', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Fraunces', Georgia, serif", 'scale': '1.333', 'radius': '4px', 'radius-lg': '8px', 'weight-heading': '600',
+    },
+  },
+  {
+    id: 'mint', name: 'Mint', tag: 'Fresh · light',
+    swatches: ['#0d9488', '#0ea5e9', '#f5fbfa'],
+    tokens: {
+      'color-bg': '#f5fbfa', 'color-surface': '#e7f5f2', 'color-surface-2': '#d6efe9',
+      'color-text': '#2f4a45', 'color-muted': '#5f827b', 'color-strong': '#0c2925', 'color-border': '#cce8e2',
+      'color-primary': '#0d9488', 'color-accent': '#0ea5e9', 'color-primary-contrast': '#ffffff',
+      'font-display': "'DM Sans', system-ui, sans-serif", 'font-ui': "'DM Sans', system-ui, sans-serif", 'radius': '14px', 'radius-lg': '22px',
+    },
+  },
+  {
+    id: 'midnight', name: 'Midnight', tag: 'Deep · dark',
+    swatches: ['#3b82f6', '#22d3ee', '#070b14'],
+    tokens: {
+      'color-bg': '#070b14', 'color-surface': '#0e1422', 'color-surface-2': '#161f31',
+      'color-text': '#b3bdd1', 'color-muted': '#76829b', 'color-strong': '#eef2fb', 'color-border': '#1d2638',
+      'color-primary': '#3b82f6', 'color-accent': '#22d3ee', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Sora', system-ui, sans-serif", 'radius': '10px', 'radius-lg': '16px',
+    },
+  },
+  {
+    id: 'sand', name: 'Sand', tag: 'Muted · warm',
+    swatches: ['#a16207', '#3f3f46', '#fbf9f4'],
+    tokens: {
+      'color-bg': '#fbf9f4', 'color-surface': '#f3eee2', 'color-surface-2': '#e9e1cf',
+      'color-text': '#46413a', 'color-muted': '#7c7466', 'color-strong': '#211e18', 'color-border': '#e4dccb',
+      'color-primary': '#a16207', 'color-accent': '#3f3f46', 'color-primary-contrast': '#fffaf0',
+      'font-display': "'Work Sans', system-ui, sans-serif", 'font-ui': "'Work Sans', system-ui, sans-serif", 'radius': '8px', 'radius-lg': '14px',
+    },
+  },
+  {
+    id: 'terminal', name: 'Terminal', tag: 'Hacker · mono',
+    swatches: ['#22c55e', '#a3e635', '#05080a'],
+    tokens: {
+      'color-bg': '#05080a', 'color-surface': '#0c1110', 'color-surface-2': '#121917',
+      'color-text': '#9fb3a8', 'color-muted': '#5f7268', 'color-strong': '#d7ffe6', 'color-border': '#1a2420',
+      'color-primary': '#22c55e', 'color-accent': '#a3e635', 'color-primary-contrast': '#05080a',
+      'font-display': "'JetBrains Mono', monospace", 'font-ui': "'JetBrains Mono', monospace", 'font-mono': "'JetBrains Mono', monospace",
+      'scale': '1.2', 'radius': '4px', 'radius-lg': '6px', 'tracking': '-0.01em',
+    },
+  },
+  {
+    id: 'candy', name: 'Candy', tag: 'Soft · pastel',
+    swatches: ['#f472b6', '#60a5fa', '#fff7fb'],
+    tokens: {
+      'color-bg': '#fff7fb', 'color-surface': '#fdeef6', 'color-surface-2': '#fbe0ee',
+      'color-text': '#4a3a44', 'color-muted': '#8a7682', 'color-strong': '#2a1a24', 'color-border': '#f6dbe9',
+      'color-primary': '#ec4899', 'color-accent': '#60a5fa', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Figtree', system-ui, sans-serif", 'font-ui': "'Figtree', system-ui, sans-serif", 'radius': '20px', 'radius-lg': '32px', 'weight-heading': '700',
+    },
+  },
+  {
+    id: 'royal', name: 'Royal', tag: 'Premium · dark',
+    swatches: ['#1e3a8a', '#eab308', '#0b1020'],
+    tokens: {
+      'color-bg': '#0a0f1f', 'color-surface': '#111934', 'color-surface-2': '#1a2549',
+      'color-text': '#c0c9e0', 'color-muted': '#8290b3', 'color-strong': '#f5f7ff', 'color-border': '#223057',
+      'color-primary': '#4f6ef0', 'color-accent': '#eab308', 'color-primary-contrast': '#0b1020',
+      'font-display': "'Playfair Display', Georgia, serif", 'scale': '1.333', 'radius': '8px', 'radius-lg': '14px', 'weight-heading': '600',
+    },
+  },
+  {
+    id: 'arctic', name: 'Arctic', tag: 'Icy · light',
+    swatches: ['#0891b2', '#6366f1', '#f4fafe'],
+    tokens: {
+      'color-bg': '#f4fafe', 'color-surface': '#e8f3fb', 'color-surface-2': '#d8ebf7',
+      'color-text': '#324653', 'color-muted': '#5f7888', 'color-strong': '#0b2330', 'color-border': '#cfe4f1',
+      'color-primary': '#0891b2', 'color-accent': '#6366f1', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Manrope', system-ui, sans-serif", 'font-ui': "'Manrope', system-ui, sans-serif", 'radius': '12px', 'radius-lg': '20px',
+    },
+  },
+  {
+    id: 'neon', name: 'Neon', tag: 'Cyber · dark',
+    swatches: ['#d946ef', '#06b6d4', '#0a0612'],
+    tokens: {
+      'color-bg': '#0a0612', 'color-surface': '#150d24', 'color-surface-2': '#1f1436',
+      'color-text': '#c4b6e0', 'color-muted': '#8576a8', 'color-strong': '#f6efff', 'color-border': '#2a1b44',
+      'color-primary': '#d946ef', 'color-accent': '#06b6d4', 'color-primary-contrast': '#0a0612',
+      'font-display': "'Space Grotesk', system-ui, sans-serif", 'radius': '10px', 'radius-lg': '16px',
+      'shadow-lg': '0 0 40px rgba(217,70,239,.3)',
+    },
+  },
+  {
+    id: 'paper', name: 'Paper', tag: 'Print · serif',
+    swatches: ['#171717', '#9a3412', '#ffffff'],
+    tokens: {
+      'color-bg': '#ffffff', 'color-surface': '#f6f6f4', 'color-surface-2': '#ededea',
+      'color-text': '#2b2b28', 'color-muted': '#6f6f68', 'color-strong': '#0a0a0a', 'color-border': '#e2e2dd',
+      'color-primary': '#171717', 'color-accent': '#9a3412', 'color-primary-contrast': '#ffffff',
+      'font-display': "'Lora', Georgia, serif", 'font-ui': "'Lora', Georgia, serif", 'scale': '1.414', 'leading': '1.75', 'radius': '2px', 'radius-lg': '4px', 'weight-heading': '600',
+    },
+  },
 ];
 
 /* Theme-editor field layout */
