@@ -196,6 +196,17 @@ function tokenField(f) {
     f.options.forEach((o) => { const op = document.createElement('option'); op.value = o; op.textContent = o; ctl.append(op); });
     ctl.value = curTok(f.key); ctl.addEventListener('change', () => setTok(f.key, ctl.value));
     updaters.push(() => { ctl.value = curTok(f.key); });
+  } else if (f.type === 'range') {
+    ctl = document.createElement('div'); ctl.className = 'range-ctl';
+    const r = document.createElement('input'); r.type = 'range'; r.min = f.min; r.max = f.max; r.step = f.step;
+    const n = document.createElement('input'); n.className = 'ctl range-num'; n.type = 'number';
+    const cur = () => parseFloat(curTok(f.key)) || f.min;
+    r.value = cur(); n.value = cur();
+    const apply = (v) => setTok(f.key, (f.unit ? v + f.unit : String(v)));
+    r.addEventListener('input', () => { n.value = r.value; apply(r.value); });
+    n.addEventListener('change', () => { r.value = n.value; apply(n.value); });
+    ctl.append(r, n);
+    updaters.push(() => { const c = cur(); r.value = c; n.value = c; });
   } else if (f.type === 'font') {
     ctl = document.createElement('select'); ctl.className = 'ctl';
     FONT_OPTIONS.forEach((o) => { const op = document.createElement('option'); op.value = `'${o}', sans-serif`; op.textContent = o; ctl.append(op); });

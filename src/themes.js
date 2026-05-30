@@ -320,16 +320,16 @@ export const TOKEN_SCHEMA = [
     group: 'Typography', fields: [
       { key: 'font-display', label: 'Display', type: 'font' },
       { key: 'font-ui', label: 'Body', type: 'font' },
-      { key: 'text-base', label: 'Base size', type: 'text' },
+      { key: 'text-base', label: 'Base size', type: 'range', min: 12, max: 24, step: 1, unit: 'px' },
       { key: 'scale', label: 'Scale', type: 'select', options: ['1.2', '1.25', '1.333', '1.414', '1.5'] },
-      { key: 'leading', label: 'Line height', type: 'text' },
+      { key: 'leading', label: 'Line height', type: 'range', min: 1, max: 2, step: 0.05, unit: '' },
     ],
   },
   {
     group: 'Shape', fields: [
-      { key: 'radius', label: 'Radius', type: 'text' },
-      { key: 'radius-lg', label: 'Radius lg', type: 'text' },
-      { key: 'container', label: 'Container', type: 'text' },
+      { key: 'radius', label: 'Radius', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'radius-lg', label: 'Radius lg', type: 'range', min: 0, max: 64, step: 1, unit: 'px' },
+      { key: 'container', label: 'Container', type: 'range', min: 720, max: 1680, step: 20, unit: 'px' },
     ],
   },
 ];

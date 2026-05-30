@@ -176,6 +176,7 @@ function buildControl(f, get, set, opts = {}) {
     case 'seg': return segCtl(get, set, f.options, f.icons);
     case 'list': return listCtl(f, get, set);
     case 'dim': return dimCtl(get, set, f);
+    case 'gradient': return gradientCtl(get, set);
     case 'iconpick': return iconPickCtl(get, set);
     case 'fontpick': return fontPickCtl(get, set);
     case 'link': return linkCtl(get, set);
@@ -290,6 +291,66 @@ function assetCtl(get, set) {
   b.onclick = () => openAssetPicker(b, get(), (v) => { set(v); setThumb(); });
   thumb.onclick = () => openAssetPicker(thumb, get(), (v) => { set(v); setThumb(); });
   wrap.append(thumb, b);
+  return wrap;
+}
+
+/* gradient editor — visual stops + angle + type */
+function splitTop(s) { const out = []; let d = 0, cur = ''; for (const ch of s) { if (ch === '(') d++; if (ch === ')') d--; if (ch === ',' && d === 0) { out.push(cur.trim()); cur = ''; } else cur += ch; } if (cur.trim()) out.push(cur.trim()); return out; }
+function parseGradient(v) {
+  const g = { type: 'linear', angle: 135, stops: [{ color: 'var(--color-primary)', pos: 0 }, { color: 'var(--color-accent)', pos: 100 }] };
+  if (!v || !/gradient\(/.test(v)) return g;
+  g.type = /radial-gradient/.test(v) ? 'radial' : 'linear';
+  const inner = v.slice(v.indexOf('(') + 1, v.lastIndexOf(')'));
+  let parts = splitTop(inner);
+  if (parts[0] && /deg|to /.test(parts[0])) { const a = parts[0].match(/(-?[\d.]+)deg/); if (a) g.angle = +a[1]; parts = parts.slice(1); }
+  else if (g.type === 'radial' && parts[0] && /circle|ellipse|at /.test(parts[0])) parts = parts.slice(1);
+  const stops = parts.map((p) => { const m = p.match(/(.*?)(?:\s+(-?[\d.]+)%)?$/); return { color: (m[1] || p).trim(), pos: m[2] != null ? +m[2] : null }; });
+  if (stops.length) { stops.forEach((s, i) => { if (s.pos == null) s.pos = Math.round(i / (stops.length - 1 || 1) * 100); }); g.stops = stops; }
+  return g;
+}
+function buildGradient(g) {
+  const stops = g.stops.map((s) => `${s.color} ${s.pos}%`).join(', ');
+  return g.type === 'radial' ? `radial-gradient(circle at 50% 50%, ${stops})` : `linear-gradient(${g.angle}deg, ${stops})`;
+}
+function gradientCtl(get, set) {
+  let g = parseGradient(get());
+  const wrap = document.createElement('div'); wrap.className = 'grad-ctl';
+  const preview = document.createElement('div'); preview.className = 'grad-preview';
+  const typeRow = document.createElement('div'); typeRow.style.cssText = 'display:flex;gap:6px';
+  const seg = document.createElement('div'); seg.className = 'seg'; seg.style.flex = '1';
+  ['linear', 'radial'].forEach((t) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; if (g.type === t) b.classList.add('is-active'); b.onclick = () => { g.type = t; seg.querySelectorAll('button').forEach((x) => x.classList.toggle('is-active', x.textContent === t)); commit(); }; seg.append(b); });
+  const angle = document.createElement('input'); angle.type = 'number'; angle.className = 'ctl'; angle.style.width = '64px'; angle.value = g.angle; angle.title = 'Angle°';
+  angle.addEventListener('input', () => { g.angle = +angle.value; commit(true); });
+  angle.addEventListener('change', () => { g.angle = +angle.value; commit(); });
+  typeRow.append(seg, angle);
+  const stopsBox = document.createElement('div'); stopsBox.className = 'grad-stops';
+  const add = document.createElement('button'); add.type = 'button'; add.className = 'listed__add'; add.textContent = '+ Add stop';
+  add.onclick = () => { g.stops.push({ color: 'var(--color-bg)', pos: 100 }); commit(); paintStops(); };
+  function commit(soft) { preview.style.background = buildGradient(g); set(buildGradient(g), soft); }
+  function paintStops() {
+    stopsBox.innerHTML = '';
+    g.stops.forEach((st, i) => {
+      const row = document.createElement('div'); row.className = 'grad-stop';
+      const sw = document.createElement('div'); sw.className = 'color-swatch';
+      const fill = document.createElement('div'); fill.className = 'color-swatch__fill'; fill.style.background = st.color;
+      const pick = document.createElement('input'); pick.type = 'color'; pick.value = /^#[0-9a-f]{6}$/i.test(st.color) ? st.color : '#5b8cff';
+      pick.addEventListener('input', () => { st.color = pick.value; fill.style.background = pick.value; commit(true); });
+      pick.addEventListener('change', () => commit());
+      sw.append(fill, pick);
+      const ci = document.createElement('input'); ci.className = 'ctl'; ci.value = st.color; ci.style.flex = '1';
+      ci.addEventListener('input', () => { st.color = ci.value; fill.style.background = ci.value; commit(true); });
+      ci.addEventListener('change', () => commit());
+      const pos = document.createElement('input'); pos.className = 'ctl'; pos.type = 'number'; pos.value = st.pos; pos.style.width = '52px';
+      pos.addEventListener('input', () => { st.pos = +pos.value; commit(true); });
+      pos.addEventListener('change', () => commit());
+      const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'listed__rm'; rm.innerHTML = '×';
+      rm.onclick = () => { if (g.stops.length > 2) { g.stops.splice(i, 1); commit(); paintStops(); } };
+      row.append(sw, ci, pos, rm); stopsBox.append(row);
+    });
+  }
+  preview.style.background = buildGradient(g);
+  paintStops();
+  wrap.append(preview, typeRow, stopsBox, add);
   return wrap;
 }
 
@@ -523,7 +584,7 @@ function clampControl(node) {
 function bgControls(node) {
   return [
     styleField(node, 'Background', 'background-color', 'color', { placeholder: 'transparent' }),
-    styleField(node, 'Gradient', 'background', 'text', { placeholder: 'linear-gradient(...)' }),
+    styleField(node, 'Gradient', 'background', 'gradient', { stack: true }),
     styleField(node, 'Radius', 'border-radius', 'dim', { min: 0, max: 64, step: 1, units: ['px', 'rem', '%'] }),
     styleField(node, 'Border', 'border', 'text', { placeholder: '1px solid #ddd' }),
     styleField(node, 'Shadow', 'box-shadow', 'text', { placeholder: 'var(--shadow)' }),
