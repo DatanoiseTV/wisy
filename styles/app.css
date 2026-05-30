@@ -104,6 +104,9 @@ input, textarea, select { font-family: inherit; }
 .zoom-btn:hover { background: var(--bg-3); color: var(--txt-0); }
 .zoom-readout { font-variant-numeric: tabular-nums; color: var(--txt-1); font-size: 12px; min-width: 46px; text-align: center; background: transparent; border: 0; padding: 0 4px; border-radius: var(--r-sm); }
 .zoom-readout:hover { background: var(--bg-3); color: var(--txt-0); }
+.device-select { height: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-md); color: var(--txt-1); font-size: 12px; padding: 0 26px 0 10px; max-width: 200px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b96a8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+.device-select:hover { border-color: var(--bg-4); color: var(--txt-0); }
+#btn-try.is-active { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px;
@@ -263,6 +266,10 @@ input, textarea, select { font-family: inherit; }
   border-radius: 8px; box-shadow: var(--sh-3);
 }
 .overlay { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; overflow: visible; }
+.stage.is-phone { border-radius: 30px; box-shadow: 0 0 0 8px #11151d, 0 0 0 9px #000, var(--sh-3); }
+.stage.is-tablet { border-radius: 20px; box-shadow: 0 0 0 10px #11151d, 0 0 0 11px #000, var(--sh-3); }
+body.is-try .stage-wrap { background: var(--bg-0); }
+body.is-try .vp-btn, body.is-try .zoom-ctl { opacity: 1; }
 
 /* selection chrome drawn by JS as children of overlay */
 .sel-box { position: absolute; border: 1.5px solid var(--accent); border-radius: 2px; pointer-events: none; }

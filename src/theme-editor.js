@@ -54,9 +54,9 @@ function initGenFromTokens() {
 }
 
 function applyGen(commit) {
+  // generator changes ONLY color-* tokens; the active preset's typography/shape stay intact
   const tokens = generatePalette(gen);
   store.doc.themeTokens = { ...store.doc.themeTokens, ...tokens };
-  store.doc.themeId = 'custom';
   store.emit('theme:change');   // canvas updates CSS vars (smooth morph)
   store.emit('persist');
   if (commit) store.transaction(() => {}, { rerender: false }); // one history entry on release

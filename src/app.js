@@ -2,7 +2,8 @@
    Wisy — application bootstrap & toolbar wiring.
    ============================================================ */
 import { store } from './state.js';
-import { initCanvas, setViewport, setZoom, zoomBy, fitZoom, resetZoom } from './canvas.js';
+import { initCanvas, setViewport, setDevice, setTryMode, isTryMode, setZoom, zoomBy, fitZoom, resetZoom } from './canvas.js';
+import { DEVICES, DEFAULT_DEVICE } from './state.js';
 import { initLibrary } from './library.js';
 import { initInspector } from './inspector.js';
 import { initLayers } from './layers.js';
@@ -31,6 +32,8 @@ function boot() {
   wireToolbar();
   wireViewport();
   wireZoom();
+  wireTry();
+  wireFile();
   wireModal();
   wireShortcuts();
   wirePersistence();
@@ -88,13 +91,83 @@ function wireToolbar() {
   store.on('change', sync); store.on('doc:loaded', sync); sync();
 }
 
-/* ---------- viewport ---------- */
+/* ---------- viewport + device ---------- */
 function wireViewport() {
+  const sel = document.getElementById('device-select');
+  // group devices by kind
+  const kinds = { desktop: 'Desktop', tablet: 'Tablet', phone: 'Phone' };
+  const groups = {};
+  for (const k in DEVICES) (groups[DEVICES[k].kind] ||= []).push([k, DEVICES[k]]);
+  ['desktop', 'tablet', 'phone'].forEach((kind) => {
+    const og = document.createElement('optgroup'); og.label = kinds[kind];
+    (groups[kind] || []).forEach(([key, d]) => { const o = document.createElement('option'); o.value = key; o.textContent = d.h ? `${d.label}  ·  ${d.w}×${d.h}` : `${d.label}  ·  ${d.w}`; og.append(o); });
+    sel.append(og);
+  });
+  sel.value = store.device;
+  sel.addEventListener('change', () => { setDevice(sel.value); syncVpButtons(); store.emit('select', store.selectedId); });
+
   document.querySelectorAll('.vp-btn').forEach((b) => b.addEventListener('click', () => {
-    document.querySelectorAll('.vp-btn').forEach((x) => x.classList.toggle('is-active', x === b));
-    setViewport(b.dataset.viewport);
-    store.emit('select', store.selectedId); // refresh inspector scope
+    setDevice(DEFAULT_DEVICE[b.dataset.viewport]);
+    sel.value = store.device; syncVpButtons();
+    store.emit('select', store.selectedId);
   }));
+  store.on('device:change', () => { sel.value = store.device; syncVpButtons(); });
+}
+function syncVpButtons() {
+  const bp = DEVICES[store.device]?.bp || 'desktop';
+  document.querySelectorAll('.vp-btn').forEach((x) => x.classList.toggle('is-active', x.dataset.viewport === bp));
+}
+
+/* ---------- try mode ---------- */
+function wireTry() {
+  const btn = document.getElementById('btn-try');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const on = !isTryMode();
+    setTryMode(on);
+    btn.classList.toggle('is-active', on);
+    btn.querySelector('span').textContent = on ? 'Editing' : 'Try';
+  });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isTryMode()) { setTryMode(false); btn.classList.remove('is-active'); btn.querySelector('span').textContent = 'Try'; } });
+}
+
+/* ---------- file: new / open / save ---------- */
+function wireFile() {
+  document.getElementById('btn-new').addEventListener('click', async () => {
+    const ok = await confirmOnce('new-project', 'New project?', { message: 'Start a fresh project. Your current work is saved in this browser but will be replaced in the editor.', confirmText: 'New project' });
+    if (!ok) return;
+    store.load(blankDoc());
+    document.getElementById('doc-title').value = store.doc.title;
+    toast('New project', 'ok');
+  });
+  document.getElementById('btn-save').addEventListener('click', () => {
+    const data = JSON.stringify({ wisy: 1, ...store.doc }, null, 2);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+    a.download = (store.doc.title || 'wisy-project').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.wisy.json';
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 20000);
+    toast('Project saved', 'ok');
+  });
+  const input = document.getElementById('open-input');
+  document.getElementById('btn-open').addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    const file = input.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!d.pages?.length) throw new Error('Not a Wisy project');
+        store.load(d); document.getElementById('doc-title').value = store.doc.title || 'Untitled Project';
+        toast('Project opened', 'ok');
+      } catch (e) { toast('Could not open: ' + e.message, 'err'); }
+      input.value = '';
+    };
+    r.readAsText(file);
+  });
+}
+function blankDoc() {
+  const page = newPage('Home');
+  return { title: 'Untitled Project', themeId: 'studio', themeTokens: {}, pages: [page], activePageId: page.id };
 }
 
 /* ---------- zoom ---------- */

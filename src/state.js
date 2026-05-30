@@ -65,6 +65,7 @@ class Store {
     this.doc = null;
     this.selectedId = null;
     this.viewport = 'desktop';
+    this.device = 'desktop';
     this.zoom = 1;
     this._subs = new Map();
     this._history = [];

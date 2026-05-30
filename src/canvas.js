@@ -5,7 +5,7 @@
    insert, drag-to-reorder, resize and inline editing are drawn
    in an overlay layered above the frame.
    ============================================================ */
-import { store, VIEWPORT_WIDTH } from './state.js';
+import { store, VIEWPORT_WIDTH, DEVICES, DEFAULT_DEVICE } from './state.js';
 import { renderNode, BASE_CSS, EDITOR_CSS, buildDocCss } from './render.js';
 import { REG } from './registry.js';
 import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
@@ -138,35 +138,58 @@ function applyTheme() {
 }
 
 let contentH = 800;
+function curDevice() { return DEVICES[store.device] || DEVICES.desktop; }
 function sizeFrame() {
   if (!ready) return;
-  contentH = Math.max(fdoc.documentElement.scrollHeight, fdoc.body.scrollHeight, 400);
-  frame.style.height = contentH + 'px';
+  const d = curDevice();
+  if (deviceFixed) {
+    contentH = d.h;
+    frame.style.height = d.h + 'px';
+    fdoc.documentElement.style.height = '100%';
+    fdoc.body.style.height = '100%';
+    fdoc.body.style.overflowY = 'auto';
+    fdoc.body.style.overflowX = 'hidden';
+  } else {
+    fdoc.documentElement.style.height = '';
+    fdoc.body.style.height = ''; fdoc.body.style.overflow = '';
+    contentH = Math.max(fdoc.documentElement.scrollHeight, fdoc.body.scrollHeight, 400);
+    frame.style.height = contentH + 'px';
+  }
   applyZoom();
 }
 
-/* ---------- viewport + zoom ---------- */
-export function setViewport(vp) {
-  store.viewport = vp;
-  frame.style.width = VIEWPORT_WIDTH[vp] + 'px';
-  userZoom = null; // refit on viewport switch
-  requestAnimationFrame(() => { sizeFrame(); drawSelection(); });
+/* ---------- device + zoom ---------- */
+export function setDevice(key) {
+  if (!DEVICES[key]) key = 'desktop';
+  store.device = key;
+  store.viewport = DEVICES[key].bp;
+  deviceFixed = !!DEVICES[key].h;
+  userZoom = null; // refit
+  const d = DEVICES[key];
+  frame.classList.toggle('is-phone', d.kind === 'phone');
+  frame.classList.toggle('is-tablet', d.kind === 'tablet');
+  if (ready) { sizeFrame(); requestAnimationFrame(() => { sizeFrame(); drawSelection(); }); }
+  store.emit('device:change', key);
 }
+export function setViewport(vp) { setDevice(DEFAULT_DEVICE[vp] || 'desktop'); }
 function fitScale() {
+  const d = curDevice();
   const availW = stageScroll.clientWidth - 80;
-  const w = VIEWPORT_WIDTH[store.viewport] || VIEWPORT_WIDTH.desktop;
-  return Math.min(1, availW / w);
+  const availH = stageScroll.clientHeight - 80;
+  if (deviceFixed) return Math.min(1, availW / d.w, availH / d.h);
+  return Math.min(1, availW / d.w);
 }
 function applyZoom() {
-  const w = VIEWPORT_WIDTH[store.viewport] || VIEWPORT_WIDTH.desktop;
+  const d = curDevice();
   const s = clamp(userZoom == null ? fitScale() : userZoom, ZMIN, ZMAX);
   store.zoom = s;
-  frame.style.width = w + 'px';
+  const h = deviceFixed ? d.h : contentH;
+  frame.style.width = d.w + 'px';
   stageFrame.style.transform = `scale(${s})`;
-  stageSizer.style.width = (w * s) + 'px';
-  stageSizer.style.height = (contentH * s) + 'px';
-  overlay.style.width = (w * s) + 'px';
-  overlay.style.height = (contentH * s) + 'px';
+  stageSizer.style.width = (d.w * s) + 'px';
+  stageSizer.style.height = (h * s) + 'px';
+  overlay.style.width = (d.w * s) + 'px';
+  overlay.style.height = (h * s) + 'px';
   if (zoomVal) zoomVal.textContent = Math.round(s * 100) + '%';
 }
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
@@ -194,14 +217,14 @@ function wireFrameEvents() {
   fdoc.addEventListener('mousemove', onFrameHover);
   fdoc.addEventListener('mouseleave', () => { hoverWid = null; clearHover(); });
   fdoc.addEventListener('dblclick', onFrameDblClick);
-  // block navigation on links/buttons inside canvas
-  fdoc.addEventListener('click', (e) => { const a = e.target.closest('a,button,form'); if (a) e.preventDefault(); }, true);
+  // block navigation on links/buttons inside canvas (except in Try mode)
+  fdoc.addEventListener('click', (e) => { if (tryMode) return; const a = e.target.closest('a,button,form'); if (a) e.preventDefault(); }, true);
   fdoc.addEventListener('keydown', (e) => { if (e.key === 'Escape') e.target.blur?.(); });
   // wheel over the canvas should pan/zoom the STAGE (not trap inside the iframe),
   // unless we're in a fixed-size device frame (then scroll inside the device).
   fdoc.addEventListener('wheel', (e) => {
     if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom((store.zoom || 1) * (e.deltaY < 0 ? 1.1 : 0.9)); return; }
-    if (deviceFixed) { drawSelection(); return; }
+    if (deviceFixed || tryMode) { drawSelection(); return; }  // scroll inside the device/page
     e.preventDefault();
     stageScroll.scrollTop += e.deltaY;
     stageScroll.scrollLeft += e.deltaX;
@@ -209,11 +232,28 @@ function wireFrameEvents() {
   fwin.addEventListener('scroll', () => drawSelection());
 }
 let deviceFixed = false;
+let tryMode = false;
+export function isTryMode() { return tryMode; }
+export function setTryMode(on) {
+  tryMode = on;
+  overlay.style.display = on ? 'none' : '';
+  document.body.classList.toggle('is-try', on);
+  if (!ready) return;
+  if (on) {
+    store.select(null);
+    fdoc.documentElement.removeAttribute('data-wisy-editor');
+    requestAnimationFrame(() => fwin?.WisyAnim?.replay?.());
+  } else {
+    fdoc.documentElement.setAttribute('data-wisy-editor', '');
+    clearAnimState();
+    drawSelection();
+  }
+}
 
 function widOf(el) { const w = el?.closest?.('[data-wid]'); return w ? w.getAttribute('data-wid') : null; }
 
 function onFrameHover(e) {
-  if (dragState) return;
+  if (dragState || tryMode) return;
   const wid = widOf(e.target);
   if (wid === hoverWid) return;
   hoverWid = wid;
@@ -221,7 +261,7 @@ function onFrameHover(e) {
 }
 
 function onFramePointerDown(e) {
-  if (e.target.isContentEditable) return;
+  if (tryMode || e.target.isContentEditable) return;
   const wid = widOf(e.target);
   if (!wid) { store.select(null); return; }
   store.select(wid);
