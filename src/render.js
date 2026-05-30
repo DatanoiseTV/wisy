@@ -292,6 +292,18 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 .wc-acc__item[open] .wc-acc__q::after{content:'−'}
 .wc-acc__a{padding:0 16px 14px}.wc-acc__a p{margin:0;color:var(--color-muted);line-height:1.6}
 
+/* logo / logotype */
+.wc-logo{display:inline-flex;align-items:center;gap:11px;text-decoration:none;color:var(--color-strong)}
+.wc-logo--stacked{flex-direction:column;gap:9px;text-align:center}
+.wc-logo__text{font-family:var(--font-display);letter-spacing:-.02em;color:var(--color-strong);line-height:1}
+.wc-logo__accent{color:var(--color-primary)}
+.wc-logo__mark{display:grid;place-items:center;color:var(--color-primary);flex:none}
+.wc-logo__mark svg{width:58%;height:58%}
+.wc-logo__mark--badge{background:color-mix(in srgb,var(--color-primary) 14%,transparent);border-radius:26%}
+.wc-logo__mark--circle{background:var(--color-primary);color:var(--color-primary-contrast);border-radius:50%}
+.wc-logo__mark--square{background:var(--color-strong);color:var(--color-bg);border-radius:26%}
+.wc-logo__mark--gradient{background:linear-gradient(135deg,var(--color-primary),var(--color-accent));color:#fff;border-radius:26%;box-shadow:var(--shadow)}
+
 /* prose / markdown */
 .wc-prose h1,.wc-prose h2,.wc-prose h3,.wc-prose h4{color:var(--color-strong);margin:1.4em 0 .5em;line-height:1.2}
 .wc-prose h1{font-size:1.8em}.wc-prose h2{font-size:1.45em}.wc-prose h3{font-size:1.2em}

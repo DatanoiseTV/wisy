@@ -439,7 +439,8 @@ export function drawSelection() {
   label.className = 'sel-label';
   label.textContent = (node?.name || REG[node?.type]?.label || node?.type || 'Element');
   label.style.left = px(r.left);
-  label.style.top = px(r.top);
+  if (r.top * (store.zoom || 1) < 20) { label.classList.add('sel-label--in'); label.style.top = px(r.top); }
+  else label.style.top = px(r.top);
   overlay.append(box, label);
   // resize handles
   ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach((h) => {
@@ -480,7 +481,8 @@ function positionHandle(el, r, h) {
 function positionDel(el, r) {
   const z = store.zoom || 1;
   el.style.left = ((r.left + r.width) * z - 22) + 'px';
-  el.style.top = (r.top * z - 30) + 'px';
+  const above = r.top * z - 30;
+  el.style.top = (above < 4 ? r.top * z + 6 : above) + 'px'; // keep inside when at canvas top
 }
 // reposition existing selection chrome without rebuilding (used during resize/scroll)
 function repositionSelection() {

@@ -88,6 +88,7 @@ export const ICONS = {
   logos: '<rect x="3" y="8" width="4" height="4" rx="1"/><rect x="10" y="8" width="4" height="4" rx="1"/><rect x="17" y="8" width="4" height="4" rx="1"/>',
   progress: '<rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor"/>',
   accordion: '<rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="11" width="18" height="5" rx="1"/><path d="M17 6.5h1M17 13.5h1"/>',
+  logo: '<rect x="3" y="6" width="7" height="7" rx="2"/><path d="M13 8h8M13 12h5"/><path d="M5 18h14"/>',
 };
 export const icoSvg = (name) => `<svg viewBox="0 0 24 24" class="ic">${ICONS[name] || ICONS.container}</svg>`;
 
@@ -203,6 +204,36 @@ def('link', {
   defaultProps: { text: 'Learn more →', href: '#' },
   defaultStyle: { color: 'var(--color-primary)', 'text-decoration': 'none', 'font-weight': '500' },
   render: (n) => edit(h('a', { class: 'wc-link', href: n.props.href || '#' }, n.props.text || 'link'), 'text'),
+});
+def('logo', {
+  label: 'Logo', group: 'Content', icon: 'logo',
+  props: [
+    { key: 'text', label: 'Wordmark', type: 'text' },
+    { key: 'accent', label: 'Accent word', type: 'select', options: ['none', 'first', 'last'] },
+    { key: 'mark', label: 'Mark', type: 'iconpick' },
+    { key: 'markStyle', label: 'Mark style', type: 'select', options: ['none', 'plain', 'badge', 'circle', 'square', 'gradient'] },
+    { key: 'layout', label: 'Layout', type: 'select', options: ['row', 'stacked'] },
+    { key: 'weight', label: 'Weight', type: 'select', options: ['600', '700', '800', '900'] },
+    { key: 'size', label: 'Size', type: 'range', min: 14, max: 64, step: 1 },
+  ],
+  defaultProps: { text: 'Acme Studio', accent: 'last', mark: 'outline:sparkles', markStyle: 'gradient', layout: 'row', weight: '800', size: 24 },
+  defaultStyle: { color: 'var(--color-strong)' },
+  render: (n) => {
+    const wrap = h('a', { class: `wc-logo wc-logo--${n.props.layout || 'row'}`, href: '#' });
+    if (n.props.markStyle && n.props.markStyle !== 'none' && n.props.mark) {
+      const [set, name] = (n.props.mark || 'outline:sparkles').split(':');
+      const ms = n.props.markStyle;
+      wrap.append(h('span', { class: `wc-logo__mark wc-logo__mark--${ms}`, style: { width: ((n.props.size || 24) * 1.5) + 'px', height: ((n.props.size || 24) * 1.5) + 'px' }, html: iconSVG(set, name, { size: 22, stroke: 2 }) }));
+    }
+    const words = (n.props.text || '').split(/\s+/).filter(Boolean);
+    const txt = h('span', { class: 'wc-logo__text', style: { 'font-weight': n.props.weight || '800', 'font-size': (n.props.size || 24) + 'px' } });
+    words.forEach((w, i) => {
+      const acc = (n.props.accent === 'first' && i === 0) || (n.props.accent === 'last' && i === words.length - 1);
+      txt.append(h('span', { class: acc ? 'wc-logo__accent' : '' }, w), i < words.length - 1 ? document.createTextNode(' ') : '');
+    });
+    wrap.append(txt);
+    return wrap;
+  },
 });
 def('badge', {
   label: 'Badge', group: 'Content', icon: 'badge',

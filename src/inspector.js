@@ -532,18 +532,43 @@ function alignPad(node) {
 
 function spacingControl(node, prop) {
   const sides = ['top', 'right', 'bottom', 'left'];
-  const wrap = document.createElement('div');
+  const inputs = {};
   const box = document.createElement('div'); box.className = 'spacing-box';
+  let linked = false;
+  const re = /^(-?[\d.]+)\s*(px|rem|em|%|vw|vh)?$/;
   sides.forEach((s) => {
     const key = `${prop}-${s}`;
     const mf = document.createElement('div'); mf.className = 'mini-field';
     const lbl = document.createElement('label'); lbl.textContent = s[0].toUpperCase();
-    const inp = document.createElement('input'); inp.className = 'ctl'; inp.type = 'text';
+    const inp = document.createElement('input'); inp.className = 'ctl'; inp.type = 'text'; inp.title = 'Drag to scrub';
     inp.value = resolveSide(node, prop, s);
-    inp.addEventListener('change', () => styleSet(node, key, inp.value));
+    inputs[s] = inp;
+    const apply = (val, soft) => {
+      if (linked) { const patch = {}; sides.forEach((o) => { patch[`${prop}-${o}`] = val; inputs[o].value = val; }); store.updateStyle(node.id, patch, store.viewport, soft ? { soft: true } : {}); }
+      else styleSet(node, key, val, soft);
+    };
+    inp.addEventListener('input', () => apply(inp.value, true));
+    inp.addEventListener('change', () => apply(inp.value));
+    // drag-to-scrub
+    inp.addEventListener('pointerdown', (e) => {
+      if (document.activeElement === inp) return;
+      e.preventDefault(); inp.setPointerCapture(e.pointerId);
+      const sx = e.clientX; const m = (inp.value || '').match(re); let base = m ? parseFloat(m[1]) : 0; const unit = (m && m[2]) || 'px';
+      const mv = (ev) => { const nv = Math.max(0, Math.round(base + (ev.clientX - sx) / 2)); apply(nv + unit, true); };
+      const up = () => { inp.releasePointerCapture(e.pointerId); window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); apply(inp.value); };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+    });
     mf.append(lbl, inp); box.append(mf);
   });
-  return field(prop[0].toUpperCase() + prop.slice(1), box, true);
+  const link = document.createElement('button'); link.type = 'button'; link.className = 'spacing-link'; link.title = 'Link all sides';
+  link.innerHTML = '<svg viewBox="0 0 24 24" class="ic" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>';
+  link.onclick = () => { linked = !linked; link.classList.toggle('is-active', linked); if (linked) { const v = inputs.top.value || '0px'; sides.forEach((o) => { inputs[o].value = v; }); const patch = {}; sides.forEach((o) => patch[`${prop}-${o}`] = v); store.updateStyle(node.id, patch); } };
+  const head = document.createElement('div'); head.style.cssText = 'display:flex;align-items:center;gap:8px';
+  const title = document.createElement('span'); title.textContent = prop[0].toUpperCase() + prop.slice(1); title.style.cssText = 'font-size:11.5px;color:var(--txt-2);flex:1';
+  head.append(title, link);
+  const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;flex-direction:column;gap:6px'; wrap.append(head, box);
+  const row = document.createElement('div'); row.className = 'field field--stack'; row.append(wrap);
+  return row;
 }
 function resolveSide(node, prop, side) {
   const s = effectiveStyle(node, store.viewport);
@@ -690,8 +715,8 @@ function transformControl(node) {
   sRow.append(s, sn);
   // flips
   const seg = document.createElement('div'); seg.className = 'seg';
-  const fh = document.createElement('button'); fh.type = 'button'; fh.textContent = 'Flip H';
-  const fv = document.createElement('button'); fv.type = 'button'; fv.textContent = 'Flip V';
+  const fh = document.createElement('button'); fh.type = 'button'; fh.title = 'Flip horizontal'; fh.innerHTML = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3v18M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>';
+  const fv = document.createElement('button'); fv.type = 'button'; fv.title = 'Flip vertical'; fv.innerHTML = '<svg viewBox="0 0 24 24" class="ic"><path d="M3 12h18M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>';
   const sync = () => { const o = get(); fh.classList.toggle('is-active', o.sx < 0); fv.classList.toggle('is-active', o.sy < 0); };
   fh.onclick = () => { const o = get(); o.sx = o.sx < 0 ? 1 : -1; set(o); sync(); };
   fv.onclick = () => { const o = get(); o.sy = o.sy < 0 ? 1 : -1; set(o); sync(); };
