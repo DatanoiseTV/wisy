@@ -46,7 +46,7 @@ export function initLibrary() {
     btn.className = 'lib-item';
     btn.type = 'button';
     btn.innerHTML = `<span class="lib-item__icon">${icoSvg(d.icon)}</span><span class="lib-item__label">${d.label}</span>`;
-    let dragging = false;
+    let dragging = false, suppressClick = false;
     btn.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
       const sx = e.clientX, sy = e.clientY;
@@ -61,13 +61,14 @@ export function initLibrary() {
       const onUp = () => {
         btn.removeEventListener('pointermove', onMove);
         btn.removeEventListener('pointerup', onUp);
-        if (dragging) { dragging = false; btn.classList.remove('dragging'); }
+        if (dragging) { dragging = false; suppressClick = true; btn.classList.remove('dragging'); }
       };
       btn.addEventListener('pointermove', onMove);
       btn.addEventListener('pointerup', onUp);
     });
     btn.addEventListener('click', () => {
-      if (dragging) return;
+      // a drag-drop already inserted via the canvas; don't also append on the trailing click
+      if (suppressClick) { suppressClick = false; return; }
       appendComponent(d.type);
     });
     return btn;

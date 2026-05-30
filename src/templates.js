@@ -3,7 +3,7 @@
    Each build() returns a page-root node tree; some also set a
    matching theme preset.
    ============================================================ */
-import { store, makeNode } from './state.js';
+import { store, makeNode, uid } from './state.js';
 import { makeComponent } from './registry.js';
 import { THEME_PRESETS } from './themes.js';
 import { confirmDialog } from './dialog.js';
@@ -26,6 +26,7 @@ export const TEMPLATES = [
   {
     id: 'saas', name: 'SaaS Landing', tag: 'Marketing', category: 'Marketing', theme: 'studio',
     thumb: thumbSaas(),
+    pages: () => secondaryPages('Northwind', 'Product, Pricing, Customers, Docs'),
     build: () => pageRoot([
       comp('navbar', { brand: 'Northwind', links: 'Product, Pricing, Customers, Docs', cta: 'Start free', variant: 'glass' }),
       comp('hero', { eyebrow: 'New · v2 is here', variant: 'gradient' }),
@@ -111,6 +112,7 @@ export const TEMPLATES = [
   {
     id: 'agency', name: 'Agency', tag: 'Bold dark', category: 'Marketing', theme: 'noir',
     thumb: gthumb('#0a0a0a', '#fafafa', 'hero', true),
+    pages: () => secondaryPages('OBSIDIAN', 'Work, Services, Studio'),
     build: () => pageRoot([
       comp('navbar', { brand: 'OBSIDIAN', links: 'Work, Services, Studio', cta: 'Start a project', variant: 'minimal' }, { 'background-color': 'transparent' }),
       comp('section', {}, { padding: '120px 24px', 'align-items': 'center', gap: '18px' }, [
@@ -127,6 +129,7 @@ export const TEMPLATES = [
   {
     id: 'startup', name: 'Startup', tag: 'Gradient', category: 'Marketing', theme: 'aurora',
     thumb: gthumb('#0b1020', '#8b5cf6', 'hero'),
+    pages: () => secondaryPages('Nebula', 'Features, Pricing, Blog'),
     build: () => pageRoot([
       comp('navbar', { brand: 'Nebula', links: 'Features, Pricing, Blog', cta: 'Try free', variant: 'glass' }),
       (() => { const hh = comp('hero', { eyebrow: 'Backed by founders', title: 'Ship your idea before the weekend ends', subtitle: 'The fastest way from concept to live product. Batteries included.', primary: 'Start building', secondary: 'Book a demo', variant: 'gradient' }); hh.anim = { type: 'fade-up', duration: 700, trigger: 'load' }; return hh; })(),
@@ -142,7 +145,7 @@ export const TEMPLATES = [
     build: () => pageRoot([
       comp('section', {}, { 'min-height': '100vh', 'align-items': 'center', 'justify-content': 'center', padding: '24px', 'background-color': 'var(--color-surface)' }, [
         anim(comp('card', {}, { 'max-width': '400px', width: '100%', padding: '34px', gap: '18px' }, [
-          comp('icon', { glyph: 'bolt', size: 30 }, { 'align-self': 'center' }),
+          comp('icon', { icon: 'outline:zap', size: 30 }, { 'align-self': 'center' }),
           comp('heading', { text: 'Welcome back', level: '2' }, { 'text-align': 'center', 'font-size': 'var(--fs-xl)' }),
           comp('text', { text: 'Sign in to continue to your workspace.' }, { 'text-align': 'center', color: 'var(--color-muted)', margin: '0' }),
           comp('input', { label: 'Email', type: 'email', placeholder: 'you@company.com' }),
@@ -250,7 +253,7 @@ export const TEMPLATES = [
     build: () => pageRoot([
       comp('section', {}, { 'min-height': '100vh', 'align-items': 'center', 'justify-content': 'space-between', padding: '40px 24px', gap: '20px', background: 'radial-gradient(120% 90% at 50% 0, color-mix(in srgb,var(--color-primary) 28%,var(--color-bg)), var(--color-bg))' }, [
         comp('stack', {}, { gap: '20px', 'align-items': 'center', flex: '1', 'justify-content': 'center' }, [
-          anim(comp('icon', { glyph: 'rocket', size: 64 }), 'zoom-in'),
+          anim(comp('icon', { icon: 'outline:rocket', size: 64 }), 'zoom-in'),
           anim(comp('heading', { text: 'Welcome to Orbit', level: '1' }, { 'text-align': 'center', 'font-size': 'var(--fs-2xl)' }), 'fade-up', 100),
           anim(comp('text', { text: 'Track your habits, hit your goals, and stay in flow.' }, { 'text-align': 'center', color: 'var(--color-muted)', 'max-width': '28ch' }), 'fade-up', 200),
         ]),
@@ -490,12 +493,12 @@ function workCard(title, tag) {
 }
 function appRow(title, meta) {
   return comp('row', {}, { 'align-items': 'center', gap: '12px', 'background-color': 'var(--color-bg)', padding: '12px', 'border-radius': 'var(--radius)', border: '1px solid var(--color-border)' }, [
-    comp('icon', { glyph: 'music', size: 22 }, {}),
+    comp('icon', { icon: 'outline:music', size: 22 }, {}),
     comp('stack', {}, { gap: '2px', flex: '1' }, [
       comp('heading', { text: title, level: '4' }, { 'font-size': '.98rem' }),
       comp('text', { text: meta }, { color: 'var(--color-muted)', 'font-size': '.82rem', margin: '0' }),
     ]),
-    comp('icon', { glyph: 'bolt', size: 18 }, { color: 'var(--color-muted)' }),
+    comp('icon', { icon: 'outline:zap', size: 18 }, { color: 'var(--color-muted)' }),
   ]);
 }
 
@@ -558,14 +561,14 @@ function menuItem(name, price) {
 function episodeRow(n, title, dur) {
   return comp('row', {}, { 'align-items': 'center', gap: '14px', padding: '14px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'flex-wrap': 'nowrap' }, [
     comp('heading', { text: n, level: '4' }, { 'font-size': '1.1rem', color: 'var(--color-muted)', width: '36px' }),
-    comp('icon', { glyph: 'music', size: 22 }, { color: 'var(--color-primary)' }),
+    comp('icon', { icon: 'outline:music', size: 22 }, { color: 'var(--color-primary)' }),
     comp('heading', { text: title, level: '4' }, { 'font-size': '1rem', 'font-weight': '500', flex: '1' }),
     comp('text', { text: dur }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
   ]);
 }
 function speakerCard(name, org) {
   return anim(comp('card', {}, { 'align-items': 'center', gap: '10px', 'text-align': 'center' }, [
-    comp('icon', { glyph: 'star', size: 30 }, { width: '64px', height: '64px', 'border-radius': '50%', background: 'color-mix(in srgb,var(--color-primary) 16%,transparent)', color: 'var(--color-primary)' }),
+    comp('icon', { icon: 'outline:star', size: 30 }, { width: '64px', height: '64px', 'border-radius': '50%', background: 'color-mix(in srgb,var(--color-primary) 16%,transparent)', color: 'var(--color-primary)' }),
     comp('heading', { text: name, level: '4' }, { 'font-size': '1.05rem' }),
     comp('text', { text: org }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
   ]), 'fade-up');
@@ -632,18 +635,48 @@ export function initTemplatesPanel() {
   paint();
 }
 
+/* secondary pages shared by marketing templates so an export ships a real site */
+function secondaryPages(brand, links) {
+  return [
+    { name: 'About', build: () => pageRoot([
+      navFor(brand, links), comp('hero', { eyebrow: 'About us', title: `The story behind ${brand}`, subtitle: 'We started with a simple belief: software should respect the people who use it.', primary: 'Join the team', secondary: 'Our values', variant: 'plain', align: 'left' }),
+      comp('stat', {}), comp('feature', { title: 'What we value' }), comp('cta', {}), comp('footer', { brand }),
+    ]) },
+    { name: 'Pricing', build: () => pageRoot([
+      navFor(brand, links), comp('section', {}, { padding: '64px 24px 16px', 'align-items': 'center', gap: '10px' }, [anim(comp('heading', { text: 'Simple, honest pricing', level: '1' }, { 'text-align': 'center' }), 'fade-up'), comp('text', { text: 'Start free. Upgrade when you’re ready.' }, { color: 'var(--color-muted)' })]),
+      comp('pricing', {}), comp('accordion', { items: 'Can I cancel anytime?|Yes, no questions asked.\nDo you offer refunds?|14-day money back.\nIs there a free plan?|Always.' }), comp('cta', {}), comp('footer', { brand }),
+    ]) },
+    { name: 'Contact', build: () => pageRoot([
+      navFor(brand, links), comp('section', {}, { padding: '64px 24px', 'align-items': 'center', gap: '24px' }, [
+        anim(comp('heading', { text: 'Get in touch', level: '1' }, { 'text-align': 'center' }), 'fade-up'),
+        comp('contact', {}),
+      ]), comp('footer', { brand }),
+    ]) },
+  ];
+}
+function navFor(brand, links) { return comp('navbar', { brand, links: links || 'Product, Pricing, About', cta: 'Sign in', variant: 'solid' }); }
+
 export function applyTemplate(tpl) {
   store.transaction(() => {
-    store.page.root = tpl.build();
     if (tpl.theme) {
       const preset = THEME_PRESETS.find((p) => p.id === tpl.theme);
       if (preset) { store.doc.themeId = preset.id; store.doc.themeTokens = { ...preset.tokens }; }
     }
+    if (tpl.pages) {
+      // full multi-page site: Home + the template's extra pages
+      const pages = [{ name: 'Home', build: tpl.build }, ...tpl.pages()];
+      store.doc.pages = pages.map((p) => ({ id: uid('p'), name: p.name, path: slugPath(p.name), root: p.build() }));
+      store.doc.activePageId = store.doc.pages[0].id;
+    } else {
+      store.page.root = tpl.build();
+    }
   });
   store.select(null);
   store.emit('theme:change');
+  store.emit('page:change');
   store.emit('render');
 }
+function slugPath(name) { return (name.toLowerCase() === 'home' ? 'index' : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) + '.html'; }
 
 /* thumbnails */
 function svg(inner) { return `<svg viewBox="0 0 200 110" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }

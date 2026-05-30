@@ -23,6 +23,20 @@ export function renderNode(node, ctx = {}) {
     if (slot) {
       kids.forEach((c) => slot.append(renderNode(c, ctx)));
       if (ctx.editor && kids.length === 0) slot.classList.add('wc-empty');
+      // repeater: clone the authored children N times (clones are static, non-selectable)
+      if (d.repeat) {
+        const count = Math.max(1, parseInt(node.props.count, 10) || 1);
+        const originals = [...slot.children];
+        for (let r = 1; r < count; r++) {
+          originals.forEach((o) => {
+            const c = o.cloneNode(true);
+            if (c.removeAttribute) c.removeAttribute('data-wid');
+            c.querySelectorAll?.('[data-wid]').forEach((x) => x.removeAttribute('data-wid'));
+            c.setAttribute?.('data-repeat-clone', '');
+            slot.append(c);
+          });
+        }
+      }
     }
   }
   return el;
