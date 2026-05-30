@@ -1,0 +1,77 @@
+/* ============================================================
+   Wisy widget styles — bundled into exports verbatim.
+   Token-driven; inherits --accent / --warn from the page theme.
+   ============================================================ */
+wisy-knob, wisy-slider, wisy-xy, wisy-toggle, wisy-meter, wisy-stepper {
+  display: inline-block; vertical-align: top; -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-ui, 'Inter', system-ui, sans-serif);
+}
+
+/* Knob */
+.wk-root { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; width: var(--wk-size, 72px); touch-action: none; cursor: ns-resize; }
+.wk-root.is-disabled { opacity: .45; cursor: not-allowed; }
+.wk-svg { width: var(--wk-size, 72px); height: var(--wk-size, 72px); display: block; overflow: visible; }
+.wk-track, .wk-val { stroke-linecap: round; }
+.wk-cap { filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+.wk-readout { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--txt-strong, #e8edf5); font-weight: 600; }
+.wk-label { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--txt-muted, #8b96a8); }
+
+/* Slider */
+.ws-root { display: inline-flex; align-items: center; gap: 9px; touch-action: none; }
+.ws-root.is-disabled { opacity: .45; pointer-events: none; }
+.ws-track { position: relative; background: rgba(150,160,180,.18); border-radius: 99px; cursor: pointer; }
+.ws-root:not(.ws-vertical) { flex-direction: row; }
+.ws-root:not(.ws-vertical) .ws-track { width: var(--ws-len, 200px); height: 6px; }
+.ws-root:not(.ws-vertical) .ws-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ws-color); border-radius: 99px; }
+.ws-vertical { flex-direction: column-reverse; }
+.ws-vertical .ws-track { height: var(--ws-len, 160px); width: 6px; }
+.ws-vertical .ws-fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ws-color); border-radius: 99px; }
+.ws-thumb { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid var(--ws-color); box-shadow: 0 2px 6px rgba(0,0,0,.35); top: 50%; transform: translateY(-50%); }
+.ws-vertical .ws-thumb { left: 50%; transform: translateX(-50%); top: auto; }
+.ws-label, .ws-readout { font-size: 11px; color: var(--txt-muted, #8b96a8); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ws-readout { color: var(--txt-strong, #e8edf5); font-weight: 600; }
+
+/* XY pad */
+.wxy-root { display: inline-flex; flex-direction: column; gap: 7px; }
+.wxy-root.is-disabled { opacity: .45; pointer-events: none; }
+.wxy-pad { position: relative; width: var(--wxy-size, 180px); height: var(--wxy-size, 180px); background: rgba(10,14,20,.5); border: 1px solid rgba(150,160,180,.2); border-radius: 10px; cursor: crosshair; overflow: hidden; touch-action: none; }
+.wxy-grid .wxy-pad { background-image: linear-gradient(rgba(150,160,180,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(150,160,180,.1) 1px, transparent 1px); background-size: 25% 25%; }
+.wxy-line { position: absolute; background: var(--wxy-color); opacity: .35; }
+.wxy-line--h { left: 0; right: 0; height: 1px; }
+.wxy-line--v { top: 0; bottom: 0; width: 1px; }
+.wxy-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--wxy-color); border: 2px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 2px 8px rgba(0,0,0,.5), 0 0 0 4px color-mix(in srgb, var(--wxy-color) 25%, transparent); }
+.wxy-read { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--txt-muted, #8b96a8); text-align: center; }
+
+/* Toggle */
+.wt-root { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
+.wt-root.is-disabled { opacity: .45; pointer-events: none; }
+.wt-btn { width: 46px; height: 26px; border-radius: 99px; background: rgba(150,160,180,.22); border: 1px solid rgba(150,160,180,.25); position: relative; padding: 0; transition: background .16s ease, border-color .16s ease; }
+.wt-dot { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); transition: transform .18s cubic-bezier(.4,0,.2,1); }
+.wt-root.is-on .wt-btn { background: var(--wt-color); border-color: var(--wt-color); }
+.wt-root.is-on .wt-dot { transform: translateX(20px); }
+.wt-txt { font-size: 12.5px; color: var(--txt-strong, #e8edf5); font-weight: 500; }
+
+/* Meter */
+.wm-root { display: inline-flex; gap: 6px; align-items: center; }
+.wm-root:not(.wm-vertical) { flex-direction: row-reverse; }
+.wm-vertical { flex-direction: column; }
+.wm-bar { position: relative; background: rgba(10,14,20,.5); border: 1px solid rgba(150,160,180,.18); border-radius: 4px; overflow: hidden; }
+.wm-vertical .wm-bar { width: 14px; height: var(--wm-len, 120px); }
+.wm-root:not(.wm-vertical) .wm-bar { height: 14px; width: var(--wm-len, 200px); }
+.wm-fill { position: absolute; left: 0; bottom: 0; }
+.wm-vertical .wm-fill { left: 0; right: 0; bottom: 0; }
+.wm-root:not(.wm-vertical) .wm-fill { top: 0; bottom: 0; left: 0; }
+.wm-seg { display: flex; gap: 2px; padding: 2px; background: transparent; border: 0; }
+.wm-vertical .wm-seg { flex-direction: column-reverse; width: 14px; height: var(--wm-len, 120px); }
+.wm-root:not(.wm-vertical) .wm-seg { flex-direction: row; height: 14px; width: var(--wm-len, 200px); }
+.wm-seg span { flex: 1; border-radius: 1.5px; min-height: 3px; }
+.wm-label { font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--txt-muted, #8b96a8); }
+
+/* Stepper */
+.wst-root { display: inline-flex; flex-direction: column; gap: 4px; }
+.wst-root.is-disabled { opacity: .45; pointer-events: none; }
+.wst-label { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--txt-muted, #8b96a8); }
+.wst-box { display: inline-flex; align-items: stretch; border: 1px solid rgba(150,160,180,.22); border-radius: 7px; overflow: hidden; background: rgba(10,14,20,.4); }
+.wst-btn { width: 28px; border: 0; background: transparent; color: var(--txt-muted, #8b96a8); font-size: 16px; line-height: 1; transition: background .12s; }
+.wst-btn:hover { background: rgba(150,160,180,.14); color: var(--txt-strong, #e8edf5); }
+.wst-inp { width: 64px; border: 0; background: transparent; text-align: center; color: var(--txt-strong, #e8edf5); font-size: 12.5px; font-variant-numeric: tabular-nums; outline: none; border-left: 1px solid rgba(150,160,180,.18); border-right: 1px solid rgba(150,160,180,.18); }
