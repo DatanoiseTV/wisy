@@ -126,6 +126,8 @@ ${scriptRefs}
 function indent(s, n) { const pad = ' '.repeat(n); return s.split('\n').map((l) => l ? pad + l : l).join('\n'); }
 
 /* ---------- public actions ---------- */
+export async function getAssets() { return assets(); }
+
 export async function getCodeBundle() {
   const { widgetsCss, widgetsJs, chartsJs } = await assets();
   return {

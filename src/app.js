@@ -13,6 +13,7 @@ import { initThemeEditor } from './theme-editor.js';
 import { getCodeBundle, previewActivePage, exportProject, highlight } from './export.js';
 import { initTextbar } from './textbar.js';
 import { confirmOnce } from './dialog.js';
+import { initWizard } from './wizard.js';
 
 const STORAGE_KEY = 'wisy.project.v1';
 
@@ -28,6 +29,7 @@ function boot() {
   initTemplatesPanel();
   initThemeEditor();
   initTextbar();
+  initWizard();
   wireRailTabs();
   wireToolbar();
   wireViewport();
