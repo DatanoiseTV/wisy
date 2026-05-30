@@ -6,6 +6,24 @@
 export const BREAKPOINTS = { tablet: 1024, mobile: 640 };
 export const VIEWPORT_WIDTH = { desktop: 1280, tablet: 820, mobile: 390 };
 
+/* Real device presets — logical (CSS) pixel sizes. `h` set ⇒ fixed screen
+   (constrained, internal scroll like a real device); no `h` ⇒ fluid height.
+   `bp` is the responsive breakpoint category (drives media queries + inspector). */
+export const DEVICES = {
+  desktop: { label: 'Desktop', w: 1280, bp: 'desktop', kind: 'desktop' },
+  laptop: { label: 'Laptop · 1440', w: 1440, bp: 'desktop', kind: 'desktop' },
+  full: { label: 'Full HD · 1920', w: 1920, bp: 'desktop', kind: 'desktop' },
+  'ipad-pro': { label: 'iPad Pro 11″', w: 834, h: 1194, bp: 'tablet', kind: 'tablet' },
+  ipad: { label: 'iPad Air', w: 820, h: 1180, bp: 'tablet', kind: 'tablet' },
+  'ipad-mini': { label: 'iPad mini', w: 744, h: 1133, bp: 'tablet', kind: 'tablet' },
+  'iphone-15-pro-max': { label: 'iPhone 15 Pro Max', w: 430, h: 932, bp: 'mobile', kind: 'phone' },
+  'iphone-15': { label: 'iPhone 15 / 14', w: 393, h: 852, bp: 'mobile', kind: 'phone' },
+  'iphone-se': { label: 'iPhone SE', w: 375, h: 667, bp: 'mobile', kind: 'phone' },
+  'pixel-8': { label: 'Pixel 8', w: 412, h: 915, bp: 'mobile', kind: 'phone' },
+  'galaxy-s23': { label: 'Galaxy S23', w: 360, h: 780, bp: 'mobile', kind: 'phone' },
+};
+export const DEFAULT_DEVICE = { desktop: 'desktop', tablet: 'ipad', mobile: 'iphone-15' };
+
 let _id = 0;
 export function uid(prefix = 'n') {
   _id++;

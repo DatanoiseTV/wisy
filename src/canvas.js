@@ -177,6 +177,17 @@ export function fitZoom() { userZoom = null; applyZoom(); drawSelection(); }
 export function resetZoom() { setZoom(1); }
 export function getZoom() { return store.zoom || 1; }
 
+// scroll the stage so a node is comfortably in view (used after insert)
+function scrollNodeIntoView(id) {
+  if (!ready) return;
+  const el = fdoc.querySelector(`[data-wid="${id}"]`); if (!el) return;
+  const r = el.getBoundingClientRect(); const z = store.zoom || 1;
+  const top = r.top * z, bottom = (r.top + r.height) * z;
+  const viewTop = stageScroll.scrollTop, viewH = stageScroll.clientHeight, pad = 48;
+  if (top < viewTop + pad) stageScroll.scrollTo({ top: Math.max(0, top - pad), behavior: 'smooth' });
+  else if (bottom > viewTop + viewH - pad) stageScroll.scrollTo({ top: bottom - viewH + pad, behavior: 'smooth' });
+}
+
 /* ---------- frame interaction ---------- */
 function wireFrameEvents() {
   fdoc.addEventListener('pointerdown', onFramePointerDown, true);
@@ -460,12 +471,15 @@ function clearDropMarker() { overlay.querySelectorAll('.drop-marker').forEach((e
 /* ---------- resize ---------- */
 function startResize(e, id, handle) {
   e.preventDefault(); e.stopPropagation();
+  const grip = e.currentTarget;           // the .sel-handle element
+  const pid = e.pointerId;
   const el = fdoc.querySelector(`[data-wid="${id}"]`);
   const start = el.getBoundingClientRect();
   const sx = e.clientX, sy = e.clientY;
   const z = store.zoom || 1;
-  const node = store.findNode(id).node;
-  let liveW = start.width, liveH = start.height;
+  let liveW = start.width, liveH = start.height, done = false;
+  // capture so events keep flowing to the parent even when the cursor is over the iframe
+  try { grip.setPointerCapture(pid); } catch { /* */ }
   const onMove = (ev) => {
     const dx = (ev.clientX - sx) / z, dy = (ev.clientY - sy) / z;
     liveW = Math.max(8, start.width + (handle.includes('e') ? dx : handle.includes('w') ? -dx : 0));
@@ -475,14 +489,21 @@ function startResize(e, id, handle) {
     repositionSelection();
   };
   const onUp = () => {
-    window.removeEventListener('pointermove', onMove);
+    if (done) return; done = true;
+    grip.removeEventListener('pointermove', onMove);
+    grip.removeEventListener('pointerup', onUp);
+    grip.removeEventListener('pointercancel', onUp);
     window.removeEventListener('pointerup', onUp);
+    try { grip.releasePointerCapture(pid); } catch { /* */ }
     const patch = {};
     if (handle.includes('e') || handle.includes('w')) patch.width = Math.round(liveW) + 'px';
     if (handle.includes('s') || handle.includes('n')) patch.height = Math.round(liveH) + 'px';
     store.updateStyle(id, patch);
   };
-  window.addEventListener('pointermove', onMove);
+  // with pointer capture, events fire on the grip itself
+  grip.addEventListener('pointermove', onMove);
+  grip.addEventListener('pointerup', onUp);
+  grip.addEventListener('pointercancel', onUp);
   window.addEventListener('pointerup', onUp);
 }
 
