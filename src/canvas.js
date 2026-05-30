@@ -264,10 +264,11 @@ export function setTryMode(on) {
   if (on) {
     store.select(null);
     fdoc.documentElement.removeAttribute('data-wisy-editor');
-    requestAnimationFrame(() => fwin?.WisyAnim?.replay?.());
+    requestAnimationFrame(() => { fwin?.WisyAnim?.replay?.(); fwin?.WisyScroll?.refresh?.(); });
   } else {
     fdoc.documentElement.setAttribute('data-wisy-editor', '');
     clearAnimState();
+    fwin?.WisyScroll?.clear?.();
     drawSelection();
   }
 }

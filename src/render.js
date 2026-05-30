@@ -46,6 +46,8 @@ function applyAnim(el, anim) {
     if (anim.easing && EASINGS[anim.easing]) el.style.setProperty('--anim-ease', EASINGS[anim.easing]);
   }
   if (anim.hover && anim.hover !== 'none') el.classList.add('wc-hov-' + anim.hover);
+  if (anim.scroll && anim.scroll !== 'none') { el.setAttribute('data-scroll', anim.scroll); if (anim.scrollAmt != null) el.style.setProperty('--scroll-amt', anim.scrollAmt); }
+  if (anim.click && anim.click !== 'none') el.setAttribute('data-click', anim.click);
 }
 
 /* ---- per-node CSS ---- */
@@ -320,6 +322,25 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 .wc-hov-glow:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 35%,transparent),var(--shadow-lg)}
 .wc-hov-tilt:hover{transform:perspective(700px) rotateX(6deg) rotateY(-6deg)}
 @media (prefers-reduced-motion: reduce){.wc-anim-on [data-anim]{opacity:1!important;animation:none!important}}
+
+/* ---- scroll-driven ---- */
+[data-scroll]{will-change:transform,opacity}
+/* ---- click / tap effects ---- */
+[data-click]{position:relative;overflow:hidden}
+.wc-ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.28;transform:translate(-50%,-50%) scale(0);pointer-events:none;animation:wcRipple .6s ease-out forwards}
+@keyframes wcRipple{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@keyframes wcPop{0%{transform:scale(1)}40%{transform:scale(.94)}100%{transform:scale(1)}}
+@keyframes wcPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--color-primary) 55%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+@keyframes wcShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+@keyframes wcJelly{0%,100%{transform:scale(1,1)}30%{transform:scale(1.12,.88)}50%{transform:scale(.9,1.1)}70%{transform:scale(1.05,.95)}}
+@keyframes wcDissolve{0%{filter:blur(0);opacity:1}50%{filter:blur(6px);opacity:.4;transform:scale(1.04)}100%{filter:blur(0);opacity:1;transform:none}}
+@keyframes wcGlitch{0%,100%{transform:none;clip-path:inset(0)}20%{transform:translate(-2px,1px);clip-path:inset(10% 0 60% 0)}40%{transform:translate(2px,-1px);clip-path:inset(60% 0 10% 0)}60%{transform:translate(-1px,2px)}80%{transform:translate(1px,-2px)}}
+.wc-clk-pop{animation:wcPop .32s ease}
+.wc-clk-pulse{animation:wcPulse .55s ease-out}
+.wc-clk-shake{animation:wcShake .5s ease}
+.wc-clk-jelly{animation:wcJelly .5s ease}
+.wc-clk-dissolve{animation:wcDissolve .55s ease}
+.wc-clk-glitch{animation:wcGlitch .4s steps(2) both}
 ` + '\n' + (CHART_CSS || '');
 
 /* editor-only overlay css injected into iframe to show drop targets */

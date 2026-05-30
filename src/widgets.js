@@ -500,3 +500,65 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();
+
+/* ============================================================
+   Scroll-driven effects + click/tap effects runtime.
+   ============================================================ */
+(function () {
+  if (window.__wisyMotion) return;
+  window.__wisyMotion = true;
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  /* scroll-linked transforms (parallax / fade / zoom / rotate) */
+  let ticking = false;
+  const isEditor = () => document.documentElement.hasAttribute('data-wisy-editor');
+  function clearScroll() { document.querySelectorAll('[data-scroll]').forEach((el) => { el.style.transform = ''; el.style.opacity = ''; }); }
+  function onScroll() {
+    if (isEditor()) { return; } // editor shows everything static; Try mode / export animate
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      document.querySelectorAll('[data-scroll]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -vh || r.top > vh * 2) return;
+        const center = r.top + r.height / 2;
+        const p = clamp((center - vh / 2) / (vh / 2 + r.height / 2), -1, 1); // -1 (below) .. 1 (above)
+        const amt = parseFloat(el.style.getPropertyValue('--scroll-amt')) || 1;
+        const enter = clamp((vh - r.top) / (vh * 0.6), 0, 1);
+        const type = el.getAttribute('data-scroll');
+        let tf = '', op = '';
+        if (type === 'parallax-up') tf = `translateY(${-p * 60 * amt}px)`;
+        else if (type === 'parallax-down') tf = `translateY(${p * 60 * amt}px)`;
+        else if (type === 'fade-scroll') { op = String(enter); tf = `translateY(${(1 - enter) * 24}px)`; }
+        else if (type === 'zoom-scroll') { tf = `scale(${1 + (1 - Math.abs(p)) * 0.12 * amt})`; }
+        else if (type === 'rotate-scroll') { tf = `rotate(${p * 8 * amt}deg)`; }
+        if (tf) el.style.transform = tf;
+        if (op !== '') el.style.opacity = op;
+      });
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+  window.addEventListener('resize', onScroll);
+  setTimeout(onScroll, 60);
+  window.WisyScroll = { refresh: onScroll, clear: clearScroll };
+
+  /* click / tap effects (delegated) */
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-click]'); if (!el) return;
+    const type = el.getAttribute('data-click');
+    if (type === 'ripple') {
+      const r = el.getBoundingClientRect();
+      const span = document.createElement('span'); span.className = 'wc-ripple';
+      const d = Math.max(r.width, r.height);
+      span.style.width = span.style.height = d + 'px';
+      span.style.left = (e.clientX - r.left) + 'px'; span.style.top = (e.clientY - r.top) + 'px';
+      el.appendChild(span); setTimeout(() => span.remove(), 650);
+    } else {
+      const cls = 'wc-clk-' + type;
+      el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+      el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+    }
+  }, true);
+})();

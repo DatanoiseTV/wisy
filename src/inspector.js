@@ -510,6 +510,9 @@ function animControls(node) {
     out.push(field('Easing', selectCtl(() => a.easing || 'spring', (v) => set({ easing: v }), ['spring', 'ease-out', 'ease-in-out', 'back', 'linear'])));
   }
   out.push(field('Hover', selectCtl(() => a.hover || 'none', (v) => set({ hover: v }), ['none', 'lift', 'grow', 'sink', 'glow', 'tilt'])));
+  out.push(field('On scroll', selectCtl(() => a.scroll || 'none', (v) => set({ scroll: v }), ['none', 'parallax-up', 'parallax-down', 'fade-scroll', 'zoom-scroll', 'rotate-scroll'])));
+  if (a.scroll && a.scroll !== 'none') out.push(field('Intensity', rangeCtl(() => a.scrollAmt ?? 1, (v) => set({ scrollAmt: v }), { min: 0.2, max: 3, step: 0.1 })));
+  out.push(field('On click', selectCtl(() => a.click || 'none', (v) => set({ click: v }), ['none', 'ripple', 'pop', 'pulse', 'shake', 'jelly', 'dissolve', 'glitch'])));
   const replay = document.createElement('button');
   replay.className = 'btn btn--ghost'; replay.style.cssText = 'width:100%;justify-content:center;margin-top:2px';
   replay.innerHTML = '<svg viewBox="0 0 24 24" class="ic" style="width:15px;height:15px"><path d="M5 3l14 9-14 9z"/></svg> Replay animations';
