@@ -89,6 +89,7 @@ export function initCanvas() {
   store.on('select', drawSelection);
   store.on('theme:change', () => { applyTheme(); });
   store.on('page:change', () => { setTimeout(renderDoc, 0); });
+  store.on('inserted', (id) => { requestAnimationFrame(() => requestAnimationFrame(() => scrollNodeIntoView(id))); });
   store.on('anim:preview', () => {
     requestAnimationFrame(() => {
       fwin?.WisyAnim?.replay();
@@ -185,7 +186,18 @@ function wireFrameEvents() {
   // block navigation on links/buttons inside canvas
   fdoc.addEventListener('click', (e) => { const a = e.target.closest('a,button,form'); if (a) e.preventDefault(); }, true);
   fdoc.addEventListener('keydown', (e) => { if (e.key === 'Escape') e.target.blur?.(); });
+  // wheel over the canvas should pan/zoom the STAGE (not trap inside the iframe),
+  // unless we're in a fixed-size device frame (then scroll inside the device).
+  fdoc.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom((store.zoom || 1) * (e.deltaY < 0 ? 1.1 : 0.9)); return; }
+    if (deviceFixed) { drawSelection(); return; }
+    e.preventDefault();
+    stageScroll.scrollTop += e.deltaY;
+    stageScroll.scrollLeft += e.deltaX;
+  }, { passive: false });
+  fwin.addEventListener('scroll', () => drawSelection());
 }
+let deviceFixed = false;
 
 function widOf(el) { const w = el?.closest?.('[data-wid]'); return w ? w.getAttribute('data-wid') : null; }
 
@@ -355,17 +367,6 @@ export function drawSelection() {
   label.style.left = px(r.left);
   label.style.top = px(r.top);
   overlay.append(box, label);
-  // delete affordance (top-right of selection)
-  if (node && node.id !== store.root.id) {
-    const del = document.createElement('button');
-    del.className = 'sel-del'; del.title = 'Delete';
-    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-    del.style.left = (r.left + r.width) * (store.zoom || 1) - 11 + 'px';
-    del.style.top = r.top * (store.zoom || 1) - 11 + 'px';
-    del.addEventListener('pointerdown', (e) => e.stopPropagation());
-    del.addEventListener('click', (e) => { e.stopPropagation(); store.emit('request-delete', id); });
-    overlay.append(del);
-  }
   // resize handles
   ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach((h) => {
     const handle = document.createElement('div');
@@ -374,6 +375,16 @@ export function drawSelection() {
     handle.addEventListener('pointerdown', (e) => startResize(e, id, h));
     overlay.append(handle);
   });
+  // delete affordance — appended LAST (on top of handles), placed clear of the corner
+  if (node && node.id !== store.root.id) {
+    const del = document.createElement('button');
+    del.className = 'sel-del'; del.title = 'Delete';
+    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    positionDel(del, r);
+    del.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); });
+    del.addEventListener('click', (e) => { e.stopPropagation(); store.emit('request-delete', id); });
+    overlay.append(del);
+  }
   drawHover();
   // floating typography toolbar
   const fr = frame.getBoundingClientRect(); const z = store.zoom || 1;
@@ -392,7 +403,22 @@ function positionHandle(el, r, h) {
   el.style.left = (cx * z - 5) + 'px';
   el.style.top = (cy * z - 5) + 'px';
 }
-function clearSelection() { overlay.querySelectorAll('.sel-box,.sel-label,.sel-handle').forEach((e) => e.remove()); }
+function positionDel(el, r) {
+  const z = store.zoom || 1;
+  el.style.left = ((r.left + r.width) * z - 22) + 'px';
+  el.style.top = (r.top * z - 30) + 'px';
+}
+// reposition existing selection chrome without rebuilding (used during resize/scroll)
+function repositionSelection() {
+  const id = store.selectedId; if (!id) return;
+  const el = fdoc.querySelector(`[data-wid="${id}"]`); if (!el) return;
+  const r = el.getBoundingClientRect();
+  const box = overlay.querySelector('.sel-box'); if (box) setRect(box, r);
+  const label = overlay.querySelector('.sel-label'); if (label) { label.style.left = px(r.left); label.style.top = px(r.top); }
+  overlay.querySelectorAll('.sel-handle').forEach((h) => positionHandle(h, r, h.dataset.h));
+  const del = overlay.querySelector('.sel-del'); if (del) positionDel(del, r);
+}
+function clearSelection() { overlay.querySelectorAll('.sel-box,.sel-label,.sel-handle,.sel-del').forEach((e) => e.remove()); }
 
 function drawHover() {
   clearHover();
@@ -446,7 +472,7 @@ function startResize(e, id, handle) {
     liveH = Math.max(8, start.height + (handle.includes('s') ? dy : handle.includes('n') ? -dy : 0));
     if (handle.includes('e') || handle.includes('w')) el.style.width = Math.round(liveW) + 'px';
     if (handle.includes('s') || handle.includes('n')) el.style.height = Math.round(liveH) + 'px';
-    drawSelection();
+    repositionSelection();
   };
   const onUp = () => {
     window.removeEventListener('pointermove', onMove);

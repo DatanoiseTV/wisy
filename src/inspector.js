@@ -13,7 +13,9 @@ const collapsed = new Set();
 export function initInspector() {
   host = document.getElementById('inspector');
   store.on('select', render);
-  store.on('change', () => { if (store.selectedId) render(); });
+  // don't rebuild the inspector while the user is typing in one of its fields
+  // (that would clobber the caret); the canvas still live-updates.
+  store.on('change', () => { if (store.selectedId && !host.contains(document.activeElement)) render(); });
   render();
 }
 
@@ -121,7 +123,7 @@ function field(label, control, stack = false) {
 /* ---------- prop controls ---------- */
 function propField(node, f) {
   const get = () => node.props[f.key];
-  const set = (v) => store.updateProps(node.id, { [f.key]: v });
+  const set = (v, soft) => store.updateProps(node.id, { [f.key]: v }, soft ? { soft: true } : {});
   const ctl = buildControl(f, get, set);
   const stack = f.type === 'textarea';
   return field(f.label, ctl, stack);
@@ -143,16 +145,19 @@ function buildControl(f, get, set, opts = {}) {
 }
 function textCtl(get, set, ph) {
   const i = document.createElement('input'); i.className = 'ctl'; i.type = 'text'; i.value = get() ?? ''; if (ph) i.placeholder = ph;
-  i.addEventListener('change', () => set(i.value));
+  i.addEventListener('input', () => set(i.value, true));   // live
+  i.addEventListener('change', () => set(i.value));         // commit (history)
   return i;
 }
 function textareaCtl(get, set) {
   const t = document.createElement('textarea'); t.className = 'ctl'; t.value = get() ?? '';
+  t.addEventListener('input', () => set(t.value, true));
   t.addEventListener('change', () => set(t.value));
   return t;
 }
 function numberCtl(get, set) {
   const i = document.createElement('input'); i.className = 'ctl'; i.type = 'number'; i.value = get() ?? '';
+  i.addEventListener('input', () => set(i.value === '' ? '' : +i.value, true));
   i.addEventListener('change', () => set(i.value === '' ? '' : +i.value));
   return i;
 }
@@ -189,8 +194,10 @@ function colorCtl(get, set, ph) {
   fill.style.background = val || 'transparent';
   picker.value = toHex(val) || '#5b8cff';
   const txt = document.createElement('input'); txt.className = 'ctl'; txt.type = 'text'; txt.value = val; txt.placeholder = ph || 'inherit';
-  picker.addEventListener('input', () => { txt.value = picker.value; fill.style.background = picker.value; set(picker.value); });
-  txt.addEventListener('change', () => { fill.style.background = txt.value; const hx = toHex(txt.value); if (hx) picker.value = hx; set(txt.value); });
+  picker.addEventListener('input', () => { txt.value = picker.value; fill.style.background = picker.value; set(picker.value, true); });
+  picker.addEventListener('change', () => set(picker.value));
+  txt.addEventListener('input', () => { fill.style.background = txt.value; const hx = toHex(txt.value); if (hx) picker.value = hx; set(txt.value, true); });
+  txt.addEventListener('change', () => set(txt.value));
   sw.append(fill, picker);
   wrap.append(sw, txt);
   return wrap;
@@ -210,10 +217,10 @@ function toHex(v) { if (!v) return null; if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.tes
 
 /* ---------- style controls ---------- */
 function styleGet(node, key) { return effectiveStyle(node, store.viewport)[key]; }
-function styleSet(node, key, v) { store.updateStyle(node.id, { [key]: v === '' ? null : v }); }
+function styleSet(node, key, v, soft) { store.updateStyle(node.id, { [key]: v === '' ? null : v }, store.viewport, soft ? { soft: true } : {}); }
 function styleField(node, label, key, type, opts = {}) {
   const f = { type, ...opts };
-  const ctl = buildControl(f, () => styleGet(node, key), (v) => styleSet(node, key, v), opts);
+  const ctl = buildControl(f, () => styleGet(node, key), (v, soft) => styleSet(node, key, v, soft), opts);
   return field(label, ctl, opts.stack);
 }
 

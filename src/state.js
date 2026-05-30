@@ -155,6 +155,7 @@ class Store {
       else parent.children.splice(index, 0, node);
     });
     this.select(node.id);
+    this.emit('inserted', node.id);
     return node;
   }
 
