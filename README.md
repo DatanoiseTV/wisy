@@ -58,7 +58,7 @@ Switch between exact device presets — iPhone, Pixel, Galaxy, iPad — at their
 | **Assets, fonts and icons** | A graphical icon browser (263 icons), a font browser (110 Google fonts with pairings and live preview), and an image picker with upload, keyword stock search and cropping. |
 | **Media embeds** | Paste a YouTube, Vimeo, Spotify, SoundCloud, Maps, Figma or CodePen link and get a responsive, privacy-respecting embed. |
 | **Motion** | Entrance, hover, scroll-driven (parallax, fade, zoom, rotate) and on-click effects, with a scroll-reveal runtime bundled into the export. |
-| **Themes** | 37 token-based themes spanning light and dark, serif and mono, sharp and rounded. |
+| **Themes** | 170+ token-based themes spanning light and dark, serif and mono, sharp and rounded — plus mesh-gradient, neon, grid and classic dev palettes (Dracula, Nord, Gruvbox, Solarized). |
 | **Projects** | Multi-page documents, undo/redo, autosave, and save/open of portable `.wisy.json` project files to hand off to a colleague. |
 
 <br/>
