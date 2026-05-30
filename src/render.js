@@ -228,6 +228,49 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 
 .wc-divider{border:0}
 
+/* media: video player + image frame */
+.wc-mediaplayer{width:100%;display:block;border-radius:var(--radius)}
+.wc-frame{margin:0;display:inline-block;max-width:100%}
+.wc-frame img{display:block;width:100%;height:100%}
+.wc-frame--shadow img{border-radius:var(--radius-lg);box-shadow:var(--shadow-lg)}
+.wc-frame--border{padding:10px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius)}
+.wc-frame--border img{border-radius:calc(var(--radius) - 4px)}
+.wc-frame--polaroid{padding:14px 14px 0;background:#fff;border-radius:4px;box-shadow:var(--shadow-lg);transform:rotate(-1.5deg)}
+.wc-frame--polaroid figcaption{padding:14px 4px;text-align:center;font-family:var(--font-display);color:#333;font-size:.95rem}
+.wc-frame--browser{border-radius:10px;overflow:hidden;border:1px solid var(--color-border);box-shadow:var(--shadow-lg);background:var(--color-surface)}
+.wc-frame__bar{display:flex;gap:7px;padding:11px 14px;background:var(--color-surface-2)}
+.wc-frame__bar span{width:11px;height:11px;border-radius:50%;background:var(--color-border)}
+.wc-frame figcaption{color:var(--color-muted);font-size:.88rem;margin-top:8px}
+
+/* contact form */
+.wc-contact{display:flex;flex-direction:column;gap:14px;width:100%;max-width:560px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow)}
+.wc-contact__title{font-size:var(--fs-xl)}
+.wc-contact__sub{color:var(--color-muted);margin:0 0 4px}
+.wc-contact__grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.wc-contact .wc-btn{align-self:flex-start;margin-top:4px}
+
+/* music: release / tracklist / tour */
+.wc-release{display:flex;gap:28px;align-items:center;flex-wrap:wrap;max-width:var(--container);margin:0 auto;padding:24px}
+.wc-release__cover{width:220px;height:220px;border-radius:var(--radius-lg);background:center/cover no-repeat var(--color-surface-2);box-shadow:var(--shadow-lg);flex:none}
+.wc-release__info{flex:1;min-width:240px;display:flex;flex-direction:column;gap:8px}
+.wc-release__type{text-transform:uppercase;letter-spacing:.12em;font-size:.74rem;font-weight:700;color:var(--color-primary)}
+.wc-release__title{font-size:var(--fs-3xl);line-height:1.05}
+.wc-release__artist{color:var(--color-muted);font-size:1.1rem;margin:0}
+.wc-release__links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.wc-tracklist{display:flex;flex-direction:column;max-width:640px;width:100%}
+.wc-tracklist__title{font-size:var(--fs-lg);margin-bottom:10px}
+.wc-track{display:flex;align-items:center;gap:14px;padding:11px 8px;border-bottom:1px solid var(--color-border)}
+.wc-track__n{font-variant-numeric:tabular-nums;color:var(--color-muted);font-size:.85rem;width:24px}
+.wc-track__play{width:18px;height:18px;color:var(--color-primary);opacity:.7}.wc-track__play svg{width:18px;height:18px}
+.wc-track__title{flex:1;font-weight:500;color:var(--color-strong)}
+.wc-track__dur{color:var(--color-muted);font-variant-numeric:tabular-nums;font-size:.85rem}
+.wc-tour{display:flex;flex-direction:column;gap:0;max-width:640px;width:100%}
+.wc-tour__title{font-size:var(--fs-lg);margin-bottom:12px}
+.wc-tour__row{display:flex;align-items:center;gap:18px;padding:14px 4px;border-bottom:1px solid var(--color-border)}
+.wc-tour__date{font-weight:700;color:var(--color-strong);min-width:64px;font-variant-numeric:tabular-nums}
+.wc-tour__place{flex:1;display:flex;flex-direction:column}
+.wc-tour__place strong{color:var(--color-strong)}.wc-tour__place span{color:var(--color-muted);font-size:.88rem}
+
 /* ---- animations ---- */
 @keyframes wcFade{from{opacity:0}to{opacity:1}}
 @keyframes wcFadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}

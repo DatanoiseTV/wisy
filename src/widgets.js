@@ -334,6 +334,105 @@
     }
   }
 
+  const PLACEHOLDER = "data:image/svg+xml," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='#dfe4ec'/><path d='M0 460l190-150 150 110 120-90 140 120v110H0z' fill='#c6cfdb'/><circle cx='430' cy='150' r='52' fill='#c6cfdb'/></svg>");
+  const tfmt = (s) => { if (!isFinite(s)) return '0:00'; const m = Math.floor(s / 60), sec = Math.floor(s % 60); return m + ':' + String(sec).padStart(2, '0'); };
+
+  /* ---------------- wisy-audio (player) ---------------- */
+  class WisyAudio extends HTMLElement {
+    static get observedAttributes() { return ['src', 'title', 'artist', 'cover', 'color']; }
+    connectedCallback() { this._build(); this._render(); }
+    attributeChangedCallback() { if (this._root) { this._sync(); } }
+    _build() {
+      this._audio = document.createElement('audio');
+      this._audio.preload = 'metadata';
+      this._root = document.createElement('div'); this._root.className = 'wap-root';
+      this._cover = document.createElement('div'); this._cover.className = 'wap-cover';
+      const main = document.createElement('div'); main.className = 'wap-main';
+      this._meta = document.createElement('div'); this._meta.className = 'wap-meta';
+      this._title = document.createElement('div'); this._title.className = 'wap-title';
+      this._artist = document.createElement('div'); this._artist.className = 'wap-artist';
+      this._meta.append(this._title, this._artist);
+      const ctrl = document.createElement('div'); ctrl.className = 'wap-ctrl';
+      this._play = document.createElement('button'); this._play.className = 'wap-play'; this._play.type = 'button';
+      this._cur = document.createElement('span'); this._cur.className = 'wap-time'; this._cur.textContent = '0:00';
+      this._bar = document.createElement('div'); this._bar.className = 'wap-bar';
+      this._fill = document.createElement('div'); this._fill.className = 'wap-fill';
+      this._bar.append(this._fill);
+      this._dur = document.createElement('span'); this._dur.className = 'wap-time'; this._dur.textContent = '0:00';
+      ctrl.append(this._play, this._cur, this._bar, this._dur);
+      main.append(this._meta, ctrl);
+      this._root.append(this._cover, main);
+      this.innerHTML = ''; this.append(this._root, this._audio);
+      this._setIcon(false);
+      this._play.addEventListener('click', () => { if (this._audio.paused) this._audio.play().catch(() => {}); else this._audio.pause(); });
+      this._audio.addEventListener('play', () => this._setIcon(true));
+      this._audio.addEventListener('pause', () => this._setIcon(false));
+      this._audio.addEventListener('timeupdate', () => { const d = this._audio.duration || 0; this._fill.style.width = (d ? (this._audio.currentTime / d * 100) : 0) + '%'; this._cur.textContent = tfmt(this._audio.currentTime); });
+      this._audio.addEventListener('loadedmetadata', () => { this._dur.textContent = tfmt(this._audio.duration); });
+      const scrub = (e) => { const r = this._bar.getBoundingClientRect(); const t = clamp((e.clientX - r.left) / r.width, 0, 1); if (this._audio.duration) this._audio.currentTime = t * this._audio.duration; this._fill.style.width = (t * 100) + '%'; };
+      this._bar.addEventListener('pointerdown', (e) => { e.preventDefault(); this._bar.setPointerCapture(e.pointerId); scrub(e); const m = (ev) => scrub(ev); const u = () => { window.removeEventListener('pointermove', m); window.removeEventListener('pointerup', u); }; window.addEventListener('pointermove', m); window.addEventListener('pointerup', u); });
+    }
+    _setIcon(playing) {
+      this._play.innerHTML = playing
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>';
+    }
+    _sync() {
+      const src = this.getAttribute('src') || '';
+      if (this._audio.getAttribute('src') !== src) this._audio.src = src;
+      this._title.textContent = this.getAttribute('title') || 'Untitled track';
+      this._artist.textContent = this.getAttribute('artist') || '';
+      const cover = this.getAttribute('cover');
+      this._cover.style.backgroundImage = `url("${cover || PLACEHOLDER}")`;
+      css(this._root, { '--wap-color': this.getAttribute('color') || 'var(--color-primary, #5b8cff)' });
+    }
+    _render() { this._sync(); }
+  }
+
+  /* ---------------- wisy-gallery (grid + lightbox) ---------------- */
+  class WisyGallery extends HTMLElement {
+    static get observedAttributes() { return ['images', 'cols', 'gap', 'radius']; }
+    connectedCallback() { this._build(); }
+    attributeChangedCallback() { if (this._root) this._build(); }
+    _images() { return (this.getAttribute('images') || '').split(/[\n,]/).map((s) => s.trim()).filter(Boolean); }
+    _build() {
+      this._root = this._root || document.createElement('div');
+      this._root.className = 'wg-root';
+      const cols = num(this.getAttribute('cols'), 3), gap = num(this.getAttribute('gap'), 10), rad = this.getAttribute('radius') || '8px';
+      css(this._root, { 'grid-template-columns': `repeat(${cols}, minmax(0,1fr))`, gap: gap + 'px' });
+      this._root.innerHTML = '';
+      const imgs = this._images(); if (!imgs.length) imgs.push(PLACEHOLDER, PLACEHOLDER, PLACEHOLDER);
+      imgs.forEach((src, i) => {
+        const cell = document.createElement('button'); cell.className = 'wg-cell'; cell.type = 'button'; cell.style.borderRadius = rad;
+        const img = document.createElement('img'); img.loading = 'lazy'; img.src = src; img.alt = '';
+        cell.append(img);
+        cell.addEventListener('click', () => { if (!document.documentElement.hasAttribute('data-wisy-editor')) this._open(i); });
+        this._root.append(cell);
+      });
+      if (!this._root.parentNode) { this.innerHTML = ''; this.append(this._root); }
+    }
+    _open(index) {
+      const imgs = this._images(); if (!imgs.length) return;
+      let i = index;
+      const ov = document.createElement('div'); ov.className = 'wg-lightbox';
+      const big = document.createElement('img');
+      const show = () => { big.src = imgs[(i + imgs.length) % imgs.length]; };
+      const nav = (d) => { i = (i + d + imgs.length) % imgs.length; show(); };
+      const prev = document.createElement('button'); prev.className = 'wg-nav wg-prev'; prev.innerHTML = '‹';
+      const next = document.createElement('button'); next.className = 'wg-nav wg-next'; next.innerHTML = '›';
+      const close = document.createElement('button'); close.className = 'wg-close'; close.innerHTML = '×';
+      prev.onclick = (e) => { e.stopPropagation(); nav(-1); };
+      next.onclick = (e) => { e.stopPropagation(); nav(1); };
+      const done = () => { ov.remove(); document.removeEventListener('keydown', key); };
+      close.onclick = done; ov.onclick = done;
+      big.onclick = (e) => e.stopPropagation();
+      const key = (e) => { if (e.key === 'Escape') done(); if (e.key === 'ArrowLeft') nav(-1); if (e.key === 'ArrowRight') nav(1); };
+      document.addEventListener('keydown', key);
+      ov.append(big, prev, next, close); show();
+      document.body.append(ov);
+    }
+  }
+
   /* geometry helpers */
   function pol(cx, cy, r, deg) { const a = (deg - 90) * Math.PI / 180; return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) }; }
   function arc(cx, cy, r, a0, a1) {
@@ -349,6 +448,8 @@
   reg('wisy-toggle', WisyToggle);
   reg('wisy-meter', WisyMeter);
   reg('wisy-stepper', WisyStepper);
+  reg('wisy-audio', WisyAudio);
+  reg('wisy-gallery', WisyGallery);
 })();
 
 /* ============================================================

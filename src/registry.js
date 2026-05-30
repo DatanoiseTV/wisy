@@ -67,6 +67,13 @@ export const ICONS = {
   appbar: '<rect x="3" y="3" width="18" height="5" rx="1"/><path d="M6 5.5h2M16 5.5h2"/>',
   embed: '<path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/>',
   pricing: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  audio: '<circle cx="6" cy="17" r="3"/><path d="M9 17V5l12-2v12"/><circle cx="18" cy="15" r="3"/>',
+  gallery: '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
+  frame: '<rect x="3" y="3" width="18" height="18" rx="1"/><rect x="7" y="7" width="10" height="7" rx="1"/><path d="M7 18h10"/>',
+  contact: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  track: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  release: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
+  tour: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',
 };
 export const icoSvg = (name) => `<svg viewBox="0 0 24 24" class="ic">${ICONS[name] || ICONS.container}</svg>`;
 
@@ -232,6 +239,124 @@ def('video', {
   defaultProps: { src: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
   defaultStyle: { width: '100%', 'aspect-ratio': '16/9', 'border-radius': 'var(--radius)', overflow: 'hidden', border: '0' },
   render: (n) => h('iframe', { class: 'wc-video', src: n.props.src || '', allowfullscreen: 'true', loading: 'lazy', title: 'Embedded video' }),
+});
+
+def('mediaplayer', {
+  label: 'Video player', group: 'Media', icon: 'video',
+  props: [
+    { key: 'src', label: 'Video URL', type: 'text' },
+    { key: 'poster', label: 'Poster URL', type: 'text' },
+  ],
+  defaultProps: { src: '', poster: '' },
+  defaultStyle: { width: '100%', 'border-radius': 'var(--radius)', display: 'block', background: '#000' },
+  render: (n) => h('video', { class: 'wc-mediaplayer', src: n.props.src || '', poster: n.props.poster || placeholderImg(), controls: '', playsinline: '', preload: 'metadata' }),
+});
+def('imageframe', {
+  label: 'Image frame', group: 'Media', icon: 'frame',
+  props: [
+    { key: 'src', label: 'Image URL', type: 'text' },
+    { key: 'caption', label: 'Caption', type: 'text' },
+    { key: 'frame', label: 'Frame', type: 'select', options: ['shadow', 'border', 'polaroid', 'browser'] },
+    { key: 'fit', label: 'Fit', type: 'select', options: ['cover', 'contain'] },
+  ],
+  defaultProps: { src: '', caption: 'A framed photograph', frame: 'polaroid', fit: 'cover' },
+  render: (n) => {
+    const fig = h('figure', { class: `wc-frame wc-frame--${n.props.frame || 'shadow'}` });
+    if (n.props.frame === 'browser') fig.append(h('div', { class: 'wc-frame__bar' }, h('span', null), h('span', null), h('span', null)));
+    fig.append(h('img', { src: n.props.src || placeholderImg(), alt: n.props.caption || '', loading: 'lazy', style: { 'object-fit': n.props.fit || 'cover' } }));
+    if (n.props.caption && n.props.frame !== 'browser') fig.append(edit(h('figcaption', null, n.props.caption), 'caption'));
+    return fig;
+  },
+});
+def('gallery', {
+  label: 'Gallery', group: 'Media', icon: 'gallery',
+  props: [
+    { key: 'images', label: 'Image URLs (one per line)', type: 'textarea' },
+    { key: 'cols', label: 'Columns', type: 'range', min: 1, max: 6, step: 1 },
+    { key: 'gap', label: 'Gap', type: 'range', min: 0, max: 40, step: 2 },
+    { key: 'radius', label: 'Radius', type: 'text' },
+  ],
+  defaultProps: { images: '', cols: 3, gap: 10, radius: '8px' },
+  defaultStyle: { width: '100%' },
+  render: (n) => buildWidget('wisy-gallery', n.props),
+});
+
+/* === MUSIC / ARTIST === */
+def('audioplayer', {
+  label: 'Audio player', group: 'Music', icon: 'audio',
+  props: [
+    { key: 'title', label: 'Track', type: 'text' },
+    { key: 'artist', label: 'Artist', type: 'text' },
+    { key: 'src', label: 'Audio URL', type: 'text' },
+    { key: 'cover', label: 'Cover URL', type: 'text' },
+    { key: 'color', label: 'Accent', type: 'color' },
+  ],
+  defaultProps: { title: 'Midnight Drive', artist: 'The Lumens', src: '', cover: '', color: '' },
+  render: (n) => buildWidget('wisy-audio', n.props),
+});
+def('release', {
+  label: 'Release', group: 'Music', icon: 'release',
+  props: [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'artist', label: 'Artist', type: 'text' },
+    { key: 'type', label: 'Type', type: 'select', options: ['Album', 'Single', 'EP'] },
+    { key: 'cover', label: 'Cover URL', type: 'text' },
+    { key: 'links', label: 'Streaming (comma)', type: 'text' },
+  ],
+  defaultProps: { title: 'Neon Fields', artist: 'The Lumens', type: 'Album', cover: '', links: 'Spotify, Apple Music, Bandcamp' },
+  render: (n) => {
+    const links = h('div', { class: 'wc-release__links' });
+    (n.props.links || '').split(',').map((s) => s.trim()).filter(Boolean).forEach((l) => links.append(h('a', { class: 'wc-btn wc-btn--outline wc-btn--sm', href: '#' }, l)));
+    return h('div', { class: 'wc-release' },
+      h('div', { class: 'wc-release__cover', style: { 'background-image': `url("${n.props.cover || placeholderImg()}")` } }),
+      h('div', { class: 'wc-release__info' },
+        h('span', { class: 'wc-release__type' }, n.props.type || 'Album'),
+        edit(h('h2', { class: 'wc-release__title' }, n.props.title || ''), 'title'),
+        edit(h('p', { class: 'wc-release__artist' }, n.props.artist || ''), 'artist'),
+        links));
+  },
+});
+def('tracklist', {
+  label: 'Track list', group: 'Music', icon: 'track',
+  props: [
+    { key: 'title', label: 'Heading', type: 'text' },
+    { key: 'tracks', label: 'Tracks (title|duration per line)', type: 'textarea' },
+  ],
+  defaultProps: { title: 'Tracklist', tracks: 'Intro|1:12\nNeon Fields|3:48\nMidnight Drive|4:05\nAfterglow|3:21\nHome|5:02' },
+  render: (n) => {
+    const list = h('div', { class: 'wc-tracklist' });
+    if (n.props.title) list.append(edit(h('h3', { class: 'wc-tracklist__title' }, n.props.title), 'title'));
+    (n.props.tracks || '').split('\n').filter((l) => l.trim()).forEach((line, i) => {
+      const [t, d] = line.split('|');
+      list.append(h('div', { class: 'wc-track' },
+        h('span', { class: 'wc-track__n' }, String(i + 1).padStart(2, '0')),
+        h('span', { class: 'wc-track__play', html: glyph('music') }),
+        h('span', { class: 'wc-track__title' }, (t || '').trim()),
+        h('span', { class: 'wc-track__dur' }, (d || '').trim())));
+    });
+    return list;
+  },
+});
+def('tour', {
+  label: 'Tour dates', group: 'Music', icon: 'tour',
+  props: [
+    { key: 'title', label: 'Heading', type: 'text' },
+    { key: 'dates', label: 'Dates (date|venue|city per line)', type: 'textarea' },
+    { key: 'button', label: 'Button', type: 'text' },
+  ],
+  defaultProps: { title: 'On tour', dates: 'May 12|Paradiso|Amsterdam\nMay 15|Village Underground|London\nMay 19|Bataclan|Paris\nMay 24|Berghain|Berlin', button: 'Tickets' },
+  render: (n) => {
+    const wrap = h('div', { class: 'wc-tour' });
+    if (n.props.title) wrap.append(edit(h('h3', { class: 'wc-tour__title' }, n.props.title), 'title'));
+    (n.props.dates || '').split('\n').filter((l) => l.trim()).forEach((line) => {
+      const [d, venue, city] = line.split('|');
+      wrap.append(h('div', { class: 'wc-tour__row' },
+        h('span', { class: 'wc-tour__date' }, (d || '').trim()),
+        h('div', { class: 'wc-tour__place' }, h('strong', null, (venue || '').trim()), h('span', null, (city || '').trim())),
+        h('a', { class: 'wc-btn wc-btn--primary wc-btn--sm', href: '#' }, n.props.button || 'Tickets')));
+    });
+    return wrap;
+  },
 });
 
 /* === SECTIONS (high-level, parametric, multi-variant) === */
@@ -415,6 +540,31 @@ def('input', {
   },
 });
 
+def('contact', {
+  label: 'Contact form', group: 'Forms', icon: 'contact',
+  props: [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text' },
+    { key: 'button', label: 'Button', type: 'text' },
+    { key: 'action', label: 'Action URL', type: 'text' },
+  ],
+  defaultProps: { title: 'Get in touch', subtitle: 'We usually reply within a day.', button: 'Send message', action: '#' },
+  render: (n) => {
+    const f = h('form', { class: 'wc-contact', action: n.props.action || '#', method: 'post' });
+    if (n.props.title) f.append(edit(h('h3', { class: 'wc-contact__title' }, n.props.title), 'title'));
+    if (n.props.subtitle) f.append(edit(h('p', { class: 'wc-contact__sub' }, n.props.subtitle), 'subtitle'));
+    const grid = h('div', { class: 'wc-contact__grid' });
+    grid.append(
+      h('label', { class: 'wc-field' }, h('span', { class: 'wc-field__label' }, 'Name'), h('input', { class: 'wc-input', type: 'text', placeholder: 'Your name', name: 'name' })),
+      h('label', { class: 'wc-field' }, h('span', { class: 'wc-field__label' }, 'Email'), h('input', { class: 'wc-input', type: 'email', placeholder: 'you@email.com', name: 'email' })),
+    );
+    f.append(grid,
+      h('label', { class: 'wc-field' }, h('span', { class: 'wc-field__label' }, 'Message'), h('textarea', { class: 'wc-input', rows: '4', placeholder: 'How can we help?', name: 'message' })),
+      h('button', { class: 'wc-btn wc-btn--primary', type: 'submit' }, n.props.button || 'Send'));
+    return f;
+  },
+});
+
 /* === AUDIO / APP UI === */
 function audioWidget(type, tag, spec) {
   def(type, { group: 'Audio / UI', ...spec, render: spec.render || ((n) => buildWidget(tag, n.props, spec.attrMap)) });
@@ -564,7 +714,7 @@ function placeholderImg() {
 }
 
 /* category order for the library palette */
-export const GROUPS = ['Sections', 'Layout', 'Content', 'Media', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
+export const GROUPS = ['Sections', 'Layout', 'Content', 'Media', 'Music', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
 
 /* make a node with the registry defaults applied */
 export function makeComponent(type) {

@@ -23,7 +23,7 @@ async function assets() {
 /* ---------- HTML serialization (pretty) ---------- */
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 const INLINE = new Set(['a', 'span', 'strong', 'em', 'b', 'i', 'code', 'small', 'sub', 'sup', 'label', 'abbr', 'mark']);
-const OPAQUE = new Set(['svg', 'wisy-knob', 'wisy-slider', 'wisy-xy', 'wisy-toggle', 'wisy-meter', 'wisy-stepper', 'iframe', 'textarea']);
+const OPAQUE = new Set(['svg', 'wisy-knob', 'wisy-slider', 'wisy-xy', 'wisy-toggle', 'wisy-meter', 'wisy-stepper', 'wisy-audio', 'wisy-gallery', 'iframe', 'textarea']);
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }

@@ -445,6 +445,29 @@ export const TEMPLATES = [
     ]),
   },
   {
+    id: 'musician', name: 'Musician', tag: 'Artist site', category: 'Music', theme: 'midnight',
+    thumb: gthumb('#070b14', '#3b82f6', 'split', true),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'THE LUMENS', links: 'Music, Tour, About', cta: 'Listen', variant: 'glass' }),
+      comp('section', {}, { padding: '48px 24px', 'align-items': 'center' }, [
+        anim(comp('release', { title: 'Neon Fields', artist: 'The Lumens', type: 'Album', links: 'Spotify, Apple Music, Bandcamp' }), 'fade-up'),
+      ]),
+      comp('section', {}, { padding: '24px', 'align-items': 'center', gap: '28px', 'background-color': 'var(--color-surface)' }, [
+        comp('heading', { text: 'Listen', level: '2' }),
+        anim(comp('audioplayer', { title: 'Midnight Drive', artist: 'The Lumens' }), 'fade-up'),
+        anim(comp('tracklist', {}), 'fade-up', 80),
+      ]),
+      comp('section', {}, { padding: '24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%', gap: '16px', 'align-items': 'stretch' }, [
+        comp('heading', { text: 'Gallery', level: '2' }),
+        comp('gallery', { cols: 4, gap: 8 }),
+      ]),
+      comp('section', {}, { padding: '40px 24px', 'align-items': 'center', gap: '12px' }, [
+        anim(comp('tour', {}), 'fade-up'),
+      ]),
+      comp('footer', { brand: 'The Lumens', tagline: 'New album out now.', cols: 'Music: Albums, Singles, Videos | Live: Tour, Tickets | Follow: Instagram, YouTube, TikTok' }),
+    ]),
+  },
+  {
     id: 'blank', name: 'Blank', tag: 'Start fresh', category: 'Blank', theme: null,
     thumb: thumbBlank(),
     build: () => pageRoot([
