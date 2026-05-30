@@ -269,6 +269,8 @@ export const EDITOR_CSS = `
 [data-wid]{cursor:default}
 html,body{min-height:100%}
 body{padding-bottom:1px}
+/* smooth palette morphing when tokens change in the editor */
+*{transition:background-color .35s ease, color .3s ease, border-color .3s ease, fill .3s ease, stroke .3s ease, box-shadow .35s ease}
 .wc-drag-flash{animation:wcflash .4s ease}
 @keyframes wcflash{from{background:color-mix(in srgb,var(--color-primary) 20%,transparent)}to{}}
 `;

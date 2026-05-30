@@ -5,10 +5,13 @@
    ============================================================ */
 import { store } from './state.js';
 import { THEME_PRESETS, TOKEN_SCHEMA, DEFAULT_TOKENS, FONT_OPTIONS } from './themes.js';
+import { generatePalette, randomScheme, hexToHsl, contrastRatio, grade, HARMONIES } from './color.js';
 
 let pop, btn, open = false;
 let updaters = [];     // in-place field refreshers
 let presetEls = [];    // preset card elements for highlight
+let gen = { hue: 220, sat: 70, harmony: 'complementary', mode: 'light', contrast: 1, tint: 0.5 };
+let genUpdaters = [];
 
 export function initThemeEditor() {
   btn = document.getElementById('btn-theme');
@@ -43,10 +46,30 @@ function applyPreset(p) {
   syncAll();
 }
 
+function initGenFromTokens() {
+  const prim = curTok('color-primary');
+  try { const [h, s] = hexToHsl(prim); gen.hue = h; gen.sat = s; } catch { /* */ }
+  const bg = curTok('color-bg');
+  try { const [, , l] = hexToHsl(bg); gen.mode = l < 45 ? 'dark' : 'light'; } catch { /* */ }
+}
+
+function applyGen(commit) {
+  const tokens = generatePalette(gen);
+  store.doc.themeTokens = { ...store.doc.themeTokens, ...tokens };
+  store.doc.themeId = 'custom';
+  store.emit('theme:change');   // canvas updates CSS vars (smooth morph)
+  store.emit('persist');
+  if (commit) store.transaction(() => {}, { rerender: false }); // one history entry on release
+  syncAll();
+}
+
 function build() {
-  updaters = []; presetEls = [];
-  pop.innerHTML = `<div class="theme-pop__head">Theme <span class="theme-pop__hint">click to try · stays open</span></div><div class="theme-pop__body"></div>`;
+  updaters = []; presetEls = []; genUpdaters = [];
+  initGenFromTokens();
+  pop.innerHTML = `<div class="theme-pop__head">Theme <span class="theme-pop__hint">live · stays open</span></div><div class="theme-pop__body"></div>`;
   const body = pop.querySelector('.theme-pop__body');
+
+  buildGenerator(body);
 
   body.append(labelEl(`Presets · ${THEME_PRESETS.length}`));
   const presets = document.createElement('div'); presets.className = 'theme-presets';
@@ -70,7 +93,69 @@ function build() {
 function labelEl(t) { const d = document.createElement('div'); d.style.cssText = 'font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-3);margin-top:4px'; d.textContent = t; return d; }
 
 function syncPresetHighlight() { presetEls.forEach((el) => el.classList.toggle('is-active', el.dataset.id === store.doc.themeId)); }
-function syncAll() { updaters.forEach((fn) => fn()); syncPresetHighlight(); }
+function syncAll() { updaters.forEach((fn) => fn()); genUpdaters.forEach((fn) => fn()); syncPresetHighlight(); }
+
+/* ---- parametric palette generator ---- */
+function buildGenerator(body) {
+  const wrap = document.createElement('div'); wrap.className = 'gen';
+  wrap.innerHTML = `<div class="gen__head"><span>Palette generator</span>
+    <button class="gen__shuffle" title="Shuffle"><svg viewBox="0 0 24 24" class="ic" style="width:14px;height:14px"><path d="M16 3h5v5M4 20l16-16M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg> Shuffle</button></div>`;
+  const grid = document.createElement('div'); grid.className = 'gen__grid';
+
+  // mode segmented
+  const modeRow = document.createElement('div'); modeRow.style.cssText = 'display:flex;gap:6px;grid-column:1/-1';
+  const seg = document.createElement('div'); seg.className = 'seg'; seg.style.flex = '1';
+  ['light', 'dark'].forEach((m) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = m[0].toUpperCase() + m.slice(1);
+    if (gen.mode === m) b.classList.add('is-active');
+    b.onclick = () => { seg.querySelectorAll('button').forEach((x) => x.classList.remove('is-active')); b.classList.add('is-active'); gen.mode = m; applyGen(true); };
+    seg.append(b);
+  });
+  modeRow.append(seg);
+  const harmony = document.createElement('select'); harmony.className = 'ctl'; harmony.style.flex = '1';
+  Object.keys(HARMONIES).forEach((h) => { const o = document.createElement('option'); o.value = h; o.textContent = h.replace('-', ' '); harmony.append(o); });
+  harmony.value = gen.harmony; harmony.onchange = () => { gen.harmony = harmony.value; applyGen(true); };
+  modeRow.append(harmony);
+  grid.append(modeRow);
+
+  grid.append(genSlider('Hue', 'hue', 0, 360, 1, true));
+  grid.append(genSlider('Saturation', 'sat', 0, 100, 1));
+  grid.append(genSlider('Contrast', 'contrast', 0.8, 1.35, 0.01));
+  grid.append(genSlider('Neutral tint', 'tint', 0, 1, 0.02));
+
+  // contrast badge
+  const badge = document.createElement('div'); badge.className = 'gen__badge';
+  const refreshBadge = () => {
+    const tk = store.doc.themeTokens || {};
+    const r = (a, b) => { try { return contrastRatio(tk[a] || DEFAULT_TOKENS[a], tk[b] || DEFAULT_TOKENS[b]); } catch { return 0; } };
+    const rt = r('color-text', 'color-bg'), rp = r('color-primary-contrast', 'color-primary');
+    badge.innerHTML = `<span>Text/BG <b>${rt.toFixed(1)}</b> <i class="g-${grade(rt) === 'low' ? 'lo' : 'ok'}">${grade(rt)}</i></span><span>Button <b>${rp.toFixed(1)}</b> <i class="g-${grade(rp) === 'low' ? 'lo' : 'ok'}">${grade(rp)}</i></span>`;
+  };
+  genUpdaters.push(refreshBadge);
+  grid.append(badge);
+
+  wrap.append(grid);
+  wrap.querySelector('.gen__shuffle').onclick = () => { gen = randomScheme(gen); applyGen(true); rebuildGen(); };
+  body.append(wrap);
+  requestAnimationFrame(refreshBadge);
+}
+function rebuildGen() { build(); } // simplest: rebuild popover to reflect shuffled values
+
+function genSlider(label, key, min, max, step, hue) {
+  const row = document.createElement('div'); row.className = 'gen__field';
+  const head = document.createElement('div'); head.className = 'gen__flabel';
+  const val = document.createElement('span');
+  head.innerHTML = `<span>${label}</span>`; head.append(val);
+  const input = document.createElement('input'); input.type = 'range'; input.min = min; input.max = max; input.step = step; input.value = gen[key];
+  input.className = 'gen__range' + (hue ? ' gen__range--hue' : '');
+  const fmt = () => { val.textContent = step < 1 ? (+gen[key]).toFixed(2) : Math.round(gen[key]); };
+  input.addEventListener('input', () => { gen[key] = +input.value; fmt(); applyGen(false); });
+  input.addEventListener('change', () => { gen[key] = +input.value; fmt(); applyGen(true); });
+  genUpdaters.push(() => { input.value = gen[key]; fmt(); });
+  fmt();
+  row.append(head, input);
+  return row;
+}
 
 function tokenField(f) {
   const row = document.createElement('div'); row.style.cssText = 'display:grid;grid-template-columns:74px 1fr;align-items:center;gap:8px';
