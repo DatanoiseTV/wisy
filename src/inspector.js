@@ -316,6 +316,7 @@ function layoutControls(node, def) {
   out.push(styleField(node, 'Display', 'display', 'select', { options: ['block', 'flex', 'grid', 'inline-flex', 'inline-block', 'none'] }));
   const disp = styleGet(node, 'display');
   if (disp === 'flex' || disp === 'inline-flex') {
+    out.push(alignPad(node));
     out.push(styleField(node, 'Direction', 'flex-direction', 'seg', {
       options: ['row', 'column'],
       icons: ['<svg viewBox="0 0 24 24" class="ic"><path d="M4 12h16M14 6l6 6-6 6"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M12 4v16M6 14l6 6 6-6"/></svg>'],
@@ -330,6 +331,41 @@ function layoutControls(node, def) {
   }
   return out;
 }
+/* graphical 3×3 alignment pad for flex containers */
+function alignPad(node) {
+  const dir = (styleGet(node, 'flex-direction') || 'row');
+  const isRow = dir.startsWith('row');
+  const map = ['flex-start', 'center', 'flex-end'];
+  const j = styleGet(node, 'justify-content') || 'flex-start';
+  const a = styleGet(node, 'align-items') || 'stretch';
+  // current cell coordinates
+  const jIdx = Math.max(0, map.indexOf(j === 'space-between' || j === 'space-around' || j === 'space-evenly' ? 'center' : j));
+  const aIdx = Math.max(0, map.indexOf(a === 'stretch' || a === 'baseline' ? 'center' : a));
+  const curC = isRow ? jIdx : aIdx;
+  const curR = isRow ? aIdx : jIdx;
+  const pad = document.createElement('div'); pad.className = 'align-pad';
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    const b = document.createElement('button'); b.className = 'align-cell'; b.type = 'button';
+    if (r === curR && c === curC) b.classList.add('is-active');
+    b.onclick = () => {
+      const h = map[c], v = map[r];
+      if (isRow) store.updateStyle(node.id, { 'justify-content': h, 'align-items': v });
+      else store.updateStyle(node.id, { 'align-items': h, 'justify-content': v });
+    };
+    pad.append(b);
+  }
+  // distribute buttons
+  const dist = document.createElement('div'); dist.className = 'align-dist';
+  [['between', 'space-between'], ['around', 'space-around'], ['evenly', 'space-evenly']].forEach(([lbl, v]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'align-distbtn' + (j === v ? ' is-active' : ''); b.textContent = lbl;
+    b.onclick = () => store.updateStyle(node.id, { 'justify-content': v });
+    dist.append(b);
+  });
+  const box = document.createElement('div'); box.style.cssText = 'display:flex;gap:10px;align-items:center';
+  box.append(pad, dist);
+  return field('Align', box, true);
+}
+
 function spacingControl(node, prop) {
   const sides = ['top', 'right', 'bottom', 'left'];
   const wrap = document.createElement('div');
