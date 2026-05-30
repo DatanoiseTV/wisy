@@ -208,7 +208,7 @@ def('icon', {
 def('list', {
   label: 'List', group: 'Content', icon: 'list',
   props: [
-    { key: 'items', label: 'Items (one per line)', type: 'textarea' },
+    { key: 'items', label: 'Items', type: 'list', columns: [{ label: 'Item' }], addLabel: 'Add item' },
     { key: 'ordered', label: 'Numbered', type: 'bool' },
     { key: 'marker', label: 'Bullet', type: 'select', options: ['check', 'dot', 'arrow', 'none'] },
   ],
@@ -273,7 +273,7 @@ def('imageframe', {
 def('gallery', {
   label: 'Gallery', group: 'Media', icon: 'gallery',
   props: [
-    { key: 'images', label: 'Image URLs (one per line)', type: 'textarea' },
+    { key: 'images', label: 'Images', type: 'list', columns: [{ label: 'Image URL' }], addLabel: 'Add image' },
     { key: 'cols', label: 'Columns', type: 'range', min: 1, max: 6, step: 1 },
     { key: 'gap', label: 'Gap', type: 'range', min: 0, max: 40, step: 2 },
     { key: 'radius', label: 'Radius', type: 'text' },
@@ -322,7 +322,7 @@ def('tracklist', {
   label: 'Track list', group: 'Music', icon: 'track',
   props: [
     { key: 'title', label: 'Heading', type: 'text' },
-    { key: 'tracks', label: 'Tracks (title|duration per line)', type: 'textarea' },
+    { key: 'tracks', label: 'Tracks', type: 'list', columns: [{ label: 'Title' }, { label: 'Time', w: '60px' }], addLabel: 'Add track' },
   ],
   defaultProps: { title: 'Tracklist', tracks: 'Intro|1:12\nNeon Fields|3:48\nMidnight Drive|4:05\nAfterglow|3:21\nHome|5:02' },
   render: (n) => {
@@ -343,7 +343,7 @@ def('tour', {
   label: 'Tour dates', group: 'Music', icon: 'tour',
   props: [
     { key: 'title', label: 'Heading', type: 'text' },
-    { key: 'dates', label: 'Dates (date|venue|city per line)', type: 'textarea' },
+    { key: 'dates', label: 'Dates', type: 'list', columns: [{ label: 'Date', w: '74px' }, { label: 'Venue' }, { label: 'City' }], addLabel: 'Add date' },
     { key: 'button', label: 'Button', type: 'text' },
   ],
   defaultProps: { title: 'On tour', dates: 'May 12|Paradiso|Amsterdam\nMay 15|Village Underground|London\nMay 19|Bataclan|Paris\nMay 24|Berghain|Berlin', button: 'Tickets' },
@@ -415,7 +415,7 @@ def('feature', {
   label: 'Feature grid', group: 'Sections', icon: 'feature',
   props: [
     { key: 'title', label: 'Title', type: 'text' },
-    { key: 'items', label: 'Features (glyph|title|desc per line)', type: 'textarea' },
+    { key: 'items', label: 'Features', type: 'list', columns: [{ label: 'Icon', type: 'select', options: Object.keys(ICON_GLYPHS) }, { label: 'Title' }, { label: 'Description' }], addLabel: 'Add feature' },
     { key: 'cols', label: 'Columns', type: 'range', min: 2, max: 4, step: 1 },
   ],
   defaultProps: {
@@ -438,7 +438,7 @@ def('feature', {
 });
 def('stat', {
   label: 'Stats', group: 'Sections', icon: 'stat',
-  props: [{ key: 'items', label: 'Stats (value|label per line)', type: 'textarea' }],
+  props: [{ key: 'items', label: 'Stats', type: 'list', columns: [{ label: 'Value', w: '88px' }, { label: 'Label' }], addLabel: 'Add stat' }],
   defaultProps: { items: '99.9%|Uptime\n12k+|Teams\n4.9/5|Rating\n<50ms|Latency' },
   render: (n) => {
     const row = h('div', { class: 'wc-stat__row' });
@@ -478,7 +478,7 @@ def('testimonial', {
 def('pricing', {
   label: 'Pricing', group: 'Sections', icon: 'pricing',
   props: [
-    { key: 'plans', label: 'Plans (name|price|features; per line)', type: 'textarea' },
+    { key: 'plans', label: 'Plans', type: 'list', columns: [{ label: 'Name', w: '84px' }, { label: 'Price', w: '60px' }, { label: 'Features (; sep)' }], addLabel: 'Add plan' },
     { key: 'featured', label: 'Highlight #', type: 'range', min: 0, max: 4, step: 1 },
   ],
   defaultProps: { plans: 'Starter|$0|1 project;Community support;Basic export\nPro|$19|Unlimited projects;Priority support;Code export;Custom themes\nTeam|$49|Everything in Pro;Collaboration;SSO;Audit log', featured: 2 },
@@ -682,7 +682,7 @@ def('appbar', {
 });
 def('tabbar', {
   label: 'Tab bar', group: 'Mobile', icon: 'tabbar',
-  props: [{ key: 'items', label: 'Tabs (glyph|label per line)', type: 'textarea' }, { key: 'active', label: 'Active #', type: 'range', min: 1, max: 5, step: 1 }],
+  props: [{ key: 'items', label: 'Tabs', type: 'list', columns: [{ label: 'Icon', type: 'select', options: Object.keys(ICON_GLYPHS) }, { label: 'Label' }], addLabel: 'Add tab' }, { key: 'active', label: 'Active #', type: 'range', min: 1, max: 5, step: 1 }],
   defaultProps: { items: 'globe|Home\nlayers|Browse\nheart|Saved\nstar|Profile', active: 1 },
   render: (n) => {
     const bar = h('nav', { class: 'wc-tabbar' });

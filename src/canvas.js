@@ -200,15 +200,21 @@ export function fitZoom() { userZoom = null; applyZoom(); drawSelection(); }
 export function resetZoom() { setZoom(1); }
 export function getZoom() { return store.zoom || 1; }
 
-// scroll the stage so a node is comfortably in view (used after insert)
+// scroll the stage so a node is comfortably in view (used after insert).
+// works in screen space so it accounts for stage padding + centering.
 function scrollNodeIntoView(id) {
   if (!ready) return;
   const el = fdoc.querySelector(`[data-wid="${id}"]`); if (!el) return;
-  const r = el.getBoundingClientRect(); const z = store.zoom || 1;
-  const top = r.top * z, bottom = (r.top + r.height) * z;
-  const viewTop = stageScroll.scrollTop, viewH = stageScroll.clientHeight, pad = 48;
-  if (top < viewTop + pad) stageScroll.scrollTo({ top: Math.max(0, top - pad), behavior: 'smooth' });
-  else if (bottom > viewTop + viewH - pad) stageScroll.scrollTo({ top: bottom - viewH + pad, behavior: 'smooth' });
+  const z = store.zoom || 1, pad = 48;
+  const r = el.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+  const view = stageScroll.getBoundingClientRect();
+  const elTop = frameRect.top + r.top * z;
+  const elBottom = frameRect.top + (r.top + r.height) * z;
+  let delta = 0;
+  if (elTop < view.top + pad) delta = elTop - (view.top + pad);
+  else if (elBottom > view.bottom - pad) delta = elBottom - (view.bottom - pad);
+  if (delta) stageScroll.scrollBy({ top: delta, behavior: 'smooth' });
 }
 
 /* ---------- frame interaction ---------- */

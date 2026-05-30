@@ -125,7 +125,7 @@ function propField(node, f) {
   const get = () => node.props[f.key];
   const set = (v, soft) => store.updateProps(node.id, { [f.key]: v }, soft ? { soft: true } : {});
   const ctl = buildControl(f, get, set);
-  const stack = f.type === 'textarea';
+  const stack = f.type === 'textarea' || f.type === 'list';
   return field(f.label, ctl, stack);
 }
 
@@ -140,6 +140,8 @@ function buildControl(f, get, set, opts = {}) {
     case 'select': return selectCtl(get, set, f.options);
     case 'font': return selectCtl(get, set, FONT_OPTIONS.map((x) => `'${x}', sans-serif`), FONT_OPTIONS);
     case 'seg': return segCtl(get, set, f.options, f.icons);
+    case 'list': return listCtl(f, get, set);
+    case 'dim': return dimCtl(get, set, f);
     default: return textCtl(get, set, opts.placeholder);
   }
 }
@@ -215,6 +217,91 @@ function segCtl(get, set, options, icons) {
 }
 function toHex(v) { if (!v) return null; if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v.length === 4 ? '#' + v.slice(1).split('').map((c) => c + c).join('') : v; return null; }
 
+/* dimension control — slider + scrubbable number + unit (pro-tool ergonomics) */
+function dimCtl(get, set, f) {
+  const units = f.units || ['px'];
+  const re = /^(-?[\d.]+)\s*(px|rem|em|%|vw|vh|ch)?$/;
+  const wrap = document.createElement('div'); wrap.className = 'dim-ctl';
+  const slider = document.createElement('input'); slider.type = 'range'; slider.min = f.min; slider.max = f.max; slider.step = f.step ?? 1; slider.className = 'dim-range';
+  const num = document.createElement('input'); num.className = 'ctl dim-num'; num.type = 'text'; num.title = 'Drag to scrub';
+  const unit = document.createElement('select'); unit.className = 'ctl dim-unit';
+  units.forEach((u) => { const o = document.createElement('option'); o.value = u; o.textContent = u || '—'; unit.append(o); });
+  function read() {
+    const v = (get() ?? '') + ''; const m = v.match(re);
+    if (m) { slider.value = m[1]; num.value = v; const u = m[2] || ''; if (units.includes(u)) unit.value = u; }
+    else { num.value = v; slider.value = f.min; }
+  }
+  read();
+  const emit = (val, soft) => { num.value = val; set(val, soft); };
+  slider.addEventListener('input', () => emit(slider.value + unit.value, true));
+  slider.addEventListener('change', () => emit(slider.value + unit.value));
+  num.addEventListener('input', () => { const m = num.value.match(re); if (m) { slider.value = m[1]; if (m[2] && units.includes(m[2])) unit.value = m[2]; } set(num.value, true); });
+  num.addEventListener('change', () => set(num.value));
+  unit.addEventListener('change', () => { const m = (num.value || '').match(re); emit((m ? m[1] : slider.value) + unit.value); });
+  // scrub: drag horizontally on the number to change value
+  num.addEventListener('pointerdown', (e) => {
+    if (document.activeElement === num) return; // let click focus for typing
+    e.preventDefault(); num.setPointerCapture(e.pointerId);
+    const start = e.clientX; const m = (num.value || '').match(re); let base = m ? parseFloat(m[1]) : (+slider.value || 0);
+    const step = f.step ?? 1;
+    const mv = (ev) => { const nv = +(base + Math.round((ev.clientX - start) / 2) * step).toFixed(3); slider.value = Math.min(f.max, Math.max(f.min, nv)); emit(nv + unit.value, true); };
+    const up = () => { num.releasePointerCapture(e.pointerId); window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); set(num.value); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  });
+  wrap.append(slider, num, unit);
+  return wrap;
+}
+
+/* structured list editor — replaces "a|b|c" textareas with real rows */
+function listCtl(f, get, set) {
+  const sep = f.sep || '|', rowsep = f.rowsep || '\n', multi = (f.columns.length > 1);
+  const wrap = document.createElement('div'); wrap.className = 'listed';
+  let rows = (get() || '').split(rowsep).map((l) => l.trim()).filter(Boolean).map((l) => multi ? l.split(sep) : [l]);
+  const serialize = () => rows.map((cells) => cells.map((c) => (c || '').trim()).join(sep)).join(rowsep);
+  const commit = (soft) => set(serialize(), soft);
+  const rowsBox = document.createElement('div'); rowsBox.className = 'listed__rows';
+
+  function makeRow(cells, ri) {
+    const row = document.createElement('div'); row.className = 'listed__row';
+    const grip = document.createElement('span'); grip.className = 'listed__grip'; grip.innerHTML = '<svg viewBox="0 0 24 24" class="ic" style="width:13px;height:13px"><path d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01"/></svg>';
+    row.append(grip);
+    f.columns.forEach((col, ci) => {
+      let inp;
+      if (col.type === 'select') {
+        inp = document.createElement('select'); inp.className = 'ctl';
+        col.options.forEach((o) => { const op = document.createElement('option'); op.value = o; op.textContent = o; inp.append(op); });
+        inp.value = cells[ci] || col.options[0]; inp.onchange = () => { cells[ci] = inp.value; commit(); };
+      } else {
+        inp = document.createElement('input'); inp.className = 'ctl'; inp.type = 'text'; inp.placeholder = col.label || ''; inp.value = cells[ci] || '';
+        inp.oninput = () => { cells[ci] = inp.value; commit(true); };
+        inp.onchange = () => { cells[ci] = inp.value; commit(); };
+      }
+      inp.style.flex = col.w ? `0 0 ${col.w}` : '1';
+      inp.style.minWidth = '0';
+      row.append(inp);
+    });
+    const rm = document.createElement('button'); rm.className = 'listed__rm'; rm.type = 'button'; rm.title = 'Remove'; rm.innerHTML = '×';
+    rm.onclick = () => { rows.splice(ri, 1); commit(); paint(); };
+    row.append(rm);
+    // drag reorder
+    row.draggable = true;
+    row.addEventListener('dragstart', (e) => { e.dataTransfer.effectAllowed = 'move'; wrap._drag = ri; row.classList.add('drag'); });
+    row.addEventListener('dragend', () => row.classList.remove('drag'));
+    row.addEventListener('dragover', (e) => { e.preventDefault(); });
+    row.addEventListener('drop', (e) => { e.preventDefault(); const from = wrap._drag; if (from == null || from === ri) return; const m = rows.splice(from, 1)[0]; rows.splice(ri, 0, m); commit(); paint(); });
+    return row;
+  }
+  function paint() {
+    rowsBox.innerHTML = '';
+    rows.forEach((cells, ri) => rowsBox.append(makeRow(cells, ri)));
+  }
+  paint();
+  const add = document.createElement('button'); add.className = 'listed__add'; add.type = 'button'; add.textContent = '+ ' + (f.addLabel || 'Add item');
+  add.onclick = () => { rows.push(f.columns.map(() => '')); commit(); paint(); };
+  wrap.append(rowsBox, add);
+  return wrap;
+}
+
 /* ---------- style controls ---------- */
 function styleGet(node, key) { return effectiveStyle(node, store.viewport)[key]; }
 function styleSet(node, key, v, soft) { store.updateStyle(node.id, { [key]: v === '' ? null : v }, store.viewport, soft ? { soft: true } : {}); }
@@ -236,7 +323,7 @@ function layoutControls(node, def) {
     out.push(styleField(node, 'Justify', 'justify-content', 'select', { options: ['flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly'] }));
     out.push(styleField(node, 'Align', 'align-items', 'select', { options: ['stretch', 'flex-start', 'center', 'flex-end', 'baseline'] }));
     out.push(styleField(node, 'Wrap', 'flex-wrap', 'select', { options: ['nowrap', 'wrap'] }));
-    out.push(styleField(node, 'Gap', 'gap', 'text', { placeholder: '0px' }));
+    out.push(styleField(node, 'Gap', 'gap', 'dim', { min: 0, max: 80, step: 1, units: ['px', 'rem'] }));
   } else if (disp === 'grid') {
     out.push(styleField(node, 'Columns', 'grid-template-columns', 'text', { placeholder: 'repeat(3, 1fr)' }));
     out.push(styleField(node, 'Gap', 'gap', 'text', { placeholder: '0px' }));
@@ -284,10 +371,10 @@ function miniLabeled(label, node, key) {
 function typoControls(node) {
   return [
     styleField(node, 'Color', 'color', 'color', { placeholder: 'inherit' }),
-    styleField(node, 'Font size', 'font-size', 'text', { placeholder: '1rem' }),
+    styleField(node, 'Font size', 'font-size', 'dim', { min: 8, max: 120, step: 1, units: ['px', 'rem', 'em'] }),
     styleField(node, 'Weight', 'font-weight', 'select', { options: ['', '300', '400', '500', '600', '700', '800', '900'] }),
-    styleField(node, 'Line height', 'line-height', 'text', { placeholder: '1.5' }),
-    styleField(node, 'Letter sp.', 'letter-spacing', 'text', { placeholder: '0' }),
+    styleField(node, 'Line height', 'line-height', 'dim', { min: 0.8, max: 3, step: 0.05, units: ['', 'px'] }),
+    styleField(node, 'Letter sp.', 'letter-spacing', 'dim', { min: -0.05, max: 0.4, step: 0.005, units: ['em', 'px'] }),
     styleField(node, 'Align', 'text-align', 'seg', {
       options: ['left', 'center', 'right', 'justify'],
       icons: ['<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M4 12h10M4 18h13"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M7 12h10M5 18h14"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M10 12h10M7 18h13"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'],
@@ -299,7 +386,7 @@ function bgControls(node) {
   return [
     styleField(node, 'Background', 'background-color', 'color', { placeholder: 'transparent' }),
     styleField(node, 'Gradient', 'background', 'text', { placeholder: 'linear-gradient(...)' }),
-    styleField(node, 'Radius', 'border-radius', 'text', { placeholder: '0px' }),
+    styleField(node, 'Radius', 'border-radius', 'dim', { min: 0, max: 64, step: 1, units: ['px', 'rem', '%'] }),
     styleField(node, 'Border', 'border', 'text', { placeholder: '1px solid #ddd' }),
     styleField(node, 'Shadow', 'box-shadow', 'text', { placeholder: 'var(--shadow)' }),
   ];
