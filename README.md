@@ -19,7 +19,7 @@ No build step, no framework, no lock-in.
 
 Most visual builders produce bloated markup you can never own. Wisy is built on a single principle: the editor and the export share one renderer, so **what you see on the canvas is exactly what ships** — semantic HTML5, token-driven CSS, and a tiny zero-dependency runtime for the interactive elements.
 
-It is not limited to marketing pages. The same engine builds dashboards, mobile screens, blogs, storefronts, and audio software front-ends, from a library of 56 parametric components and 32 ready-made templates.
+It is not limited to marketing pages. The same engine builds dashboards, mobile screens, blogs, storefronts, and audio software front-ends, from a library of 57 parametric components and 71 ready-made templates.
 
 <br/>
 
@@ -51,7 +51,7 @@ Switch between exact device presets — iPhone, Pixel, Galaxy, iPad — at their
 
 | | |
 |---|---|
-| **56 parametric components** | Sections, layout primitives, content, general UI (alerts, avatars, breadcrumbs, steps, timeline, progress, accordion), media, data charts, music, forms and mobile bars — each with a library of named style presets. |
+| **57 parametric components** | Sections, layout primitives, content, general UI (alerts, avatars, breadcrumbs, steps, timeline, progress, accordion), media, data charts, music, forms and mobile bars — each with a library of named style presets. |
 | **Data visualization** | Nine pure-SVG chart types (bar, line, area, pie, donut, sparkline, gauge, progress, radar), themed automatically. |
 | **Audio-grade controls** | Knob, slider, XY pad, level meter, toggle, stepper and rack panel as real custom elements, drag and scroll interactive, shipped with your export. |
 | **Pro editing** | Drag-to-insert and reorder, resize handles, inline rich text with a floating typography toolbar, structured list editors, slider and scrub-number controls, a graphical alignment pad, a visual gradient editor and a draggable image focus-point with crop. |
@@ -65,7 +65,7 @@ Switch between exact device presets — iPhone, Pixel, Galaxy, iPad — at their
 
 ## Templates
 
-Thirty-two starting points across marketing, app, e-commerce, industry, content, audio, mobile and utility — many shipping multiple core pages (Home, About, Pricing, Contact).
+Seventy-one starting points across marketing, app, e-commerce, industry, content, audio, mobile and utility — many shipping multiple core pages (Home, About, Pricing, Contact).
 
 <table>
   <tr>
