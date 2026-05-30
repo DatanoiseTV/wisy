@@ -10,6 +10,8 @@
    what you see is exactly what ships.
    ============================================================ */
 import { makeNode } from './state.js';
+import { CHART_TYPES, chartDefaults } from './charts.js';
+import { parseEmbed } from './embeds.js';
 
 /* tiny hyperscript over real DOM (we're always in a browser) */
 export function h(tag, attrs, ...kids) {
@@ -74,6 +76,8 @@ export const ICONS = {
   track: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   release: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
   tour: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',
+  chart: '<path d="M4 19V5M4 19h16M8 16V9M13 16V6M18 16v-4"/>',
+  embed2: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/>',
 };
 export const icoSvg = (name) => `<svg viewBox="0 0 24 24" class="ic">${ICONS[name] || ICONS.container}</svg>`;
 
@@ -281,6 +285,41 @@ def('gallery', {
   defaultProps: { images: '', cols: 3, gap: 10, radius: '8px' },
   defaultStyle: { width: '100%' },
   render: (n) => buildWidget('wisy-gallery', n.props),
+});
+
+/* === DATA / CHARTS === */
+def('chart', {
+  label: 'Chart', group: 'Data', icon: 'chart',
+  props: [
+    { key: 'type', label: 'Type', type: 'select', options: CHART_TYPES },
+    { key: 'data', label: 'Data', type: 'list', columns: [{ label: 'Label' }, { label: 'Value', w: '64px' }], sep: ':', addLabel: 'Add point' },
+    { key: 'color', label: 'Color', type: 'color' },
+    { key: 'palette', label: 'Palette (comma)', type: 'text' },
+    { key: 'height', label: 'Height', type: 'range', min: 80, max: 480, step: 10 },
+    { key: 'grid', label: 'Gridlines', type: 'bool' },
+    { key: 'value', label: 'Value (gauge)', type: 'number' },
+    { key: 'max', label: 'Max (gauge)', type: 'number' },
+    { key: 'label', label: 'Center label', type: 'text' },
+  ],
+  defaultProps: chartDefaults('bar'),
+  defaultStyle: { width: '100%' },
+  render: (n) => buildWidget('wisy-chart', n.props),
+});
+
+def('mediaembed', {
+  label: 'Embed', group: 'Media', icon: 'embed2',
+  props: [
+    { key: 'url', label: 'URL', type: 'text' },
+    { key: 'privacy', label: 'Privacy mode', type: 'bool' },
+  ],
+  defaultProps: { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', privacy: true },
+  defaultStyle: { width: '100%', 'max-width': '720px' },
+  render: (n) => {
+    const el = h('div', { class: 'wc-mediaembed' });
+    const r = parseEmbed(n.props.url || '', { privacy: n.props.privacy !== false });
+    el.innerHTML = (r && r.ok) ? r.html : '<div style="padding:28px;border:1px dashed var(--color-border);border-radius:var(--radius);text-align:center;color:var(--color-muted)">Paste a YouTube · Vimeo · Spotify · SoundCloud · Maps · Figma · CodePen… URL</div>';
+    return el;
+  },
 });
 
 /* === MUSIC / ARTIST === */
@@ -716,7 +755,7 @@ function placeholderImg() {
 }
 
 /* category order for the library palette */
-export const GROUPS = ['Sections', 'Layout', 'Content', 'Media', 'Music', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
+export const GROUPS = ['Sections', 'Layout', 'Content', 'Media', 'Data', 'Music', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
 
 /* make a node with the registry defaults applied */
 export function makeComponent(type) {

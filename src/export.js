@@ -9,21 +9,23 @@ import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
 
 const widgetsCssUrl = new URL('../styles/widgets.css', import.meta.url).href;
 const widgetsJsUrl = new URL('./widgets.js', import.meta.url).href;
+const chartsJsUrl = new URL('./charts.js', import.meta.url).href;
 let _assets = null;
 async function assets() {
   if (_assets) return _assets;
-  const [css, js] = await Promise.all([
+  const [css, js, charts] = await Promise.all([
     fetch(widgetsCssUrl).then((r) => r.text()),
     fetch(widgetsJsUrl).then((r) => r.text()),
+    fetch(chartsJsUrl).then((r) => r.text()),
   ]);
-  _assets = { widgetsCss: css, widgetsJs: js };
+  _assets = { widgetsCss: css, widgetsJs: js, chartsJs: charts };
   return _assets;
 }
 
 /* ---------- HTML serialization (pretty) ---------- */
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 const INLINE = new Set(['a', 'span', 'strong', 'em', 'b', 'i', 'code', 'small', 'sub', 'sup', 'label', 'abbr', 'mark']);
-const OPAQUE = new Set(['svg', 'wisy-knob', 'wisy-slider', 'wisy-xy', 'wisy-toggle', 'wisy-meter', 'wisy-stepper', 'wisy-audio', 'wisy-gallery', 'iframe', 'textarea']);
+const OPAQUE = new Set(['svg', 'wisy-knob', 'wisy-slider', 'wisy-xy', 'wisy-toggle', 'wisy-meter', 'wisy-stepper', 'wisy-audio', 'wisy-gallery', 'wisy-chart', 'iframe', 'textarea']);
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
@@ -83,7 +85,7 @@ export function buildStylesCss(widgetsCss) {
     `/* ---- UI widgets ---- */\n${widgetsCss.trim()}\n`;
 }
 
-export function buildPageHtml(page, { single = false, widgetsCss = '', widgetsJs = '' } = {}) {
+export function buildPageHtml(page, { single = false, widgetsCss = '', widgetsJs = '', chartsJs = '' } = {}) {
   const tokens = { ...DEFAULT_TOKENS, ...(store.doc.themeTokens || {}) };
   const fonts = googleFontsHref(tokens);
   const docCss = buildDocCss(page.root);
@@ -98,11 +100,12 @@ export function buildPageHtml(page, { single = false, widgetsCss = '', widgetsJs
   if (single) {
     head.push(`  <style>\n${indent(buildStylesCss(widgetsCss), 4)}\n  </style>`);
     head.push(docCss ? `  <style>\n${indent(docCss, 4)}\n  </style>` : '');
-    scriptRefs = `  <script>\n${indent(widgetsJs, 4)}\n  </scr` + `ipt>`;
+    scriptRefs = `  <script>\n${indent(widgetsJs, 4)}\n  </scr` + `ipt>` +
+      (chartsJs ? `\n  <script type="module">\n${indent(chartsJs, 4)}\n  </scr` + `ipt>` : '');
   } else {
     head.push('  <link rel="stylesheet" href="styles.css">');
     head.push(docCss ? `  <style>\n${indent(docCss, 4)}\n  </style>` : '');
-    scriptRefs = '  <script src="widgets.js" defer></scr' + 'ipt>';
+    scriptRefs = '  <script src="widgets.js" defer></scr' + 'ipt>\n  <script type="module" src="charts.js"></scr' + 'ipt>';
   }
   const body = pageBodyHtml(page);
   return `<!DOCTYPE html>
@@ -121,17 +124,17 @@ function indent(s, n) { const pad = ' '.repeat(n); return s.split('\n').map((l) 
 
 /* ---------- public actions ---------- */
 export async function getCodeBundle() {
-  const { widgetsCss, widgetsJs } = await assets();
+  const { widgetsCss, widgetsJs, chartsJs } = await assets();
   return {
-    html: buildPageHtml(store.page, { widgetsCss, widgetsJs }),
+    html: buildPageHtml(store.page, { widgetsCss, widgetsJs, chartsJs }),
     css: buildStylesCss(widgetsCss),
     js: widgetsJs,
   };
 }
 
 export async function previewActivePage() {
-  const { widgetsCss, widgetsJs } = await assets();
-  const html = buildPageHtml(store.page, { single: true, widgetsCss, widgetsJs });
+  const { widgetsCss, widgetsJs, chartsJs } = await assets();
+  const html = buildPageHtml(store.page, { single: true, widgetsCss, widgetsJs, chartsJs });
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
@@ -139,13 +142,14 @@ export async function previewActivePage() {
 }
 
 export async function exportProject() {
-  const { widgetsCss, widgetsJs } = await assets();
+  const { widgetsCss, widgetsJs, chartsJs } = await assets();
   const files = [];
   files.push({ name: 'styles.css', content: buildStylesCss(widgetsCss) });
   files.push({ name: 'widgets.js', content: widgetsJs });
+  files.push({ name: 'charts.js', content: chartsJs });
   store.doc.pages.forEach((p, i) => {
     const name = i === 0 ? 'index.html' : (p.path || `page-${i}.html`);
-    files.push({ name, content: buildPageHtml(p, { widgetsCss, widgetsJs }) });
+    files.push({ name, content: buildPageHtml(p, { widgetsCss, widgetsJs, chartsJs }) });
   });
   files.push({ name: 'README.md', content: readme() });
   const blob = zipStore(files);

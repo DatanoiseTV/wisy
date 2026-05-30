@@ -52,6 +52,7 @@ function clearAnimState() {
 
 const widgetsCssUrl = new URL('../styles/widgets.css', import.meta.url).href;
 const widgetsJsUrl = new URL('./widgets.js', import.meta.url).href;
+const chartsJsUrl = new URL('./charts.js', import.meta.url).href;
 
 export function initCanvas() {
   frame = document.getElementById('stage');
@@ -68,6 +69,7 @@ export function initCanvas() {
 <link rel="stylesheet" href="${widgetsCssUrl}">
 <style id="wisy-base"></style><style id="wisy-theme"></style><style id="wisy-doc"></style>
 <script src="${widgetsJsUrl}"></scr` + `ipt>
+<script type="module" src="${chartsJsUrl}"></scr` + `ipt>
 </head><body><div id="wisy-root"></div></body></html>`;
 
   frame.addEventListener('load', () => {

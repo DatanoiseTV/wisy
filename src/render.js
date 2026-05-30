@@ -6,6 +6,7 @@
    ============================================================ */
 import { REG } from './registry.js';
 import { effectiveStyle } from './state.js';
+import { CHART_CSS } from './charts.js';
 
 export function renderNode(node, ctx = {}) {
   const d = REG[node.type];
@@ -319,7 +320,7 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 .wc-hov-glow:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 35%,transparent),var(--shadow-lg)}
 .wc-hov-tilt:hover{transform:perspective(700px) rotateX(6deg) rotateY(-6deg)}
 @media (prefers-reduced-motion: reduce){.wc-anim-on [data-anim]{opacity:1!important;animation:none!important}}
-`;
+` + '\n' + (CHART_CSS || '');
 
 /* editor-only overlay css injected into iframe to show drop targets */
 export const EDITOR_CSS = `
