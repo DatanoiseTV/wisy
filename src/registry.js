@@ -295,7 +295,7 @@ def('imageframe', {
 def('gallery', {
   label: 'Gallery', group: 'Media', icon: 'gallery',
   props: [
-    { key: 'images', label: 'Images', type: 'list', columns: [{ label: 'Image URL' }], addLabel: 'Add image' },
+    { key: 'images', label: 'Images', type: 'list', columns: [{ label: 'Image', type: 'asset' }], addLabel: 'Add image' },
     { key: 'cols', label: 'Columns', type: 'range', min: 1, max: 6, step: 1 },
     { key: 'gap', label: 'Gap', type: 'range', min: 0, max: 40, step: 2 },
     { key: 'radius', label: 'Radius', type: 'text' },

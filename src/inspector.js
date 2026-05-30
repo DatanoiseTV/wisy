@@ -5,10 +5,11 @@
    ============================================================ */
 import { store, effectiveStyle } from './state.js';
 import { REG, icoSvg } from './registry.js';
-import { FONT_OPTIONS } from './themes.js';
+import { FONT_OPTIONS, DEFAULT_TOKENS } from './themes.js';
 import { iconSVG } from './iconlib.js';
 import { openIconPicker, openFontBrowser, openLinkPicker, openAssetPicker, openCropModal } from './pickers.js';
 import { presetsFor } from './component-presets.js';
+import { getFrame } from './canvas.js';
 
 let host;
 const collapsed = new Set();
@@ -28,7 +29,7 @@ function render() {
     host.innerHTML = `<div class="insp-empty">
       <svg viewBox="0 0 24 24" class="ic"><path d="M12 2l9 4.9v10.2L12 22l-9-4.9V6.9z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>
       <p>Select an element to edit its properties.</p>
-      <p style="margin-top:14px;color:var(--txt-3);font-size:11.5px">Tip: double-click text on the canvas to edit it inline.</p>
+      <p style="margin-top:14px;color:var(--txt-3);font-size:11.5px">Tip: double-click a heading, paragraph or button on the canvas to edit it inline.</p>
     </div>`;
     return;
   }
@@ -232,12 +233,12 @@ function colorCtl(get, set, ph) {
   const fill = document.createElement('div'); fill.className = 'color-swatch__fill';
   const picker = document.createElement('input'); picker.type = 'color';
   const val = get() || '';
-  fill.style.background = val || 'transparent';
-  picker.value = toHex(val) || '#5b8cff';
+  fill.style.background = resolveColor(val) || 'transparent';
+  picker.value = toHex(resolveColor(val)) || '#5b8cff';
   const txt = document.createElement('input'); txt.className = 'ctl'; txt.type = 'text'; txt.value = val; txt.placeholder = ph || 'inherit';
   picker.addEventListener('input', () => { txt.value = picker.value; fill.style.background = picker.value; set(picker.value, true); });
   picker.addEventListener('change', () => set(picker.value));
-  txt.addEventListener('input', () => { fill.style.background = txt.value; const hx = toHex(txt.value); if (hx) picker.value = hx; set(txt.value, true); });
+  txt.addEventListener('input', () => { fill.style.background = resolveColor(txt.value); const hx = toHex(txt.value); if (hx) picker.value = hx; set(txt.value, true); });
   txt.addEventListener('change', () => set(txt.value));
   sw.append(fill, picker);
   wrap.append(sw, txt);
@@ -253,6 +254,15 @@ function segCtl(get, set, options, icons) {
     seg.append(b);
   });
   return seg;
+}
+/* resolve var(--token) → actual color so editor-chrome swatches/previews show the real color */
+function resolveColor(v) {
+  if (!v) return v;
+  let s = String(v); let guard = 0;
+  while (/var\(\s*--([\w-]+)/.test(s) && guard++ < 6) {
+    s = s.replace(/var\(\s*--([\w-]+)\s*(?:,[^)]*)?\)/g, (_, t) => (store.doc.themeTokens?.[t]) ?? DEFAULT_TOKENS[t] ?? 'transparent');
+  }
+  return s;
 }
 function toHex(v) { if (!v) return null; if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v.length === 4 ? '#' + v.slice(1).split('').map((c) => c + c).join('') : v; return null; }
 
@@ -326,13 +336,14 @@ function gradientCtl(get, set) {
   const stopsBox = document.createElement('div'); stopsBox.className = 'grad-stops';
   const add = document.createElement('button'); add.type = 'button'; add.className = 'listed__add'; add.textContent = '+ Add stop';
   add.onclick = () => { g.stops.push({ color: 'var(--color-bg)', pos: 100 }); commit(); paintStops(); };
-  function commit(soft) { preview.style.background = buildGradient(g); set(buildGradient(g), soft); }
+  function previewGradient(gg) { const stops = gg.stops.map((s) => `${resolveColor(s.color)} ${s.pos}%`).join(', '); return gg.type === 'radial' ? `radial-gradient(circle at 50% 50%, ${stops})` : `linear-gradient(${gg.angle}deg, ${stops})`; }
+  function commit(soft) { preview.style.background = previewGradient(g); set(buildGradient(g), soft); }
   function paintStops() {
     stopsBox.innerHTML = '';
     g.stops.forEach((st, i) => {
       const row = document.createElement('div'); row.className = 'grad-stop';
       const sw = document.createElement('div'); sw.className = 'color-swatch';
-      const fill = document.createElement('div'); fill.className = 'color-swatch__fill'; fill.style.background = st.color;
+      const fill = document.createElement('div'); fill.className = 'color-swatch__fill'; fill.style.background = resolveColor(st.color);
       const pick = document.createElement('input'); pick.type = 'color'; pick.value = /^#[0-9a-f]{6}$/i.test(st.color) ? st.color : '#5b8cff';
       pick.addEventListener('input', () => { st.color = pick.value; fill.style.background = pick.value; commit(true); });
       pick.addEventListener('change', () => commit());
@@ -348,7 +359,7 @@ function gradientCtl(get, set) {
       row.append(sw, ci, pos, rm); stopsBox.append(row);
     });
   }
-  preview.style.background = buildGradient(g);
+  preview.style.background = previewGradient(g);
   paintStops();
   wrap.append(preview, typeRow, stopsBox, add);
   return wrap;
@@ -404,6 +415,15 @@ function listCtl(f, get, set) {
     row.append(grip);
     f.columns.forEach((col, ci) => {
       let inp;
+      if (col.type === 'asset') {
+        inp = document.createElement('button'); inp.type = 'button'; inp.className = 'ctl pick-btn listed-asset';
+        const paintA = () => { const v = cells[ci] || ''; inp.innerHTML = `<span class="listed-asset__th"${v ? ` style="background-image:url('${v.replace(/'/g, '%27')}')"` : ''}></span><span class="pick-lbl">${v ? 'Image set' : 'Choose image…'}</span>`; };
+        paintA();
+        inp.onclick = () => openAssetPicker(inp, cells[ci], (val) => { cells[ci] = val; paintA(); commit(); });
+        inp.style.flex = col.w ? `0 0 ${col.w}` : '1';
+        row.append(inp);
+        return;
+      }
       if (col.type === 'select') {
         inp = document.createElement('select'); inp.className = 'ctl';
         col.options.forEach((o) => { const op = document.createElement('option'); op.value = o; op.textContent = o; inp.append(op); });
@@ -441,10 +461,17 @@ function listCtl(f, get, set) {
 
 /* ---------- style controls ---------- */
 function styleGet(node, key) { return effectiveStyle(node, store.viewport)[key]; }
+function computedVal(node, key) {
+  try { const { fdoc, fwin } = getFrame(); const el = fdoc?.querySelector(`[data-wid="${node.id}"]`); return el ? fwin.getComputedStyle(el).getPropertyValue(key).trim() : ''; } catch { return ''; }
+}
 function styleSet(node, key, v, soft) { store.updateStyle(node.id, { [key]: v === '' ? null : v }, store.viewport, soft ? { soft: true } : {}); }
 function styleField(node, label, key, type, opts = {}) {
   const f = { type, ...opts };
-  const ctl = buildControl(f, () => styleGet(node, key), (v, soft) => styleSet(node, key, v, soft), opts);
+  // for sliders, show the live computed value when nothing is explicitly set (so opacity reads 1, not 0)
+  const get = (type === 'range' || type === 'dim')
+    ? () => { const v = styleGet(node, key); return (v != null && v !== '') ? v : computedVal(node, key); }
+    : () => styleGet(node, key);
+  const ctl = buildControl(f, get, (v, soft) => styleSet(node, key, v, soft), opts);
   return field(label, ctl, opts.stack);
 }
 
@@ -535,7 +562,7 @@ function sizeControls(node) {
 }
 function miniLabeled(label, node, key) {
   const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;align-items:center;gap:6px';
-  const l = document.createElement('span'); l.textContent = label; l.style.cssText = 'font-size:10px;color:var(--txt-3);min-width:32px';
+  const l = document.createElement('span'); l.textContent = label; l.style.cssText = 'font-size:10px;color:var(--txt-3);min-width:46px';
   const i = document.createElement('input'); i.className = 'ctl'; i.type = 'text'; i.value = styleGet(node, key) ?? ''; i.placeholder = 'auto';
   i.addEventListener('change', () => styleSet(node, key, i.value));
   wrap.append(l, i);
