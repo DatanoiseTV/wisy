@@ -416,7 +416,32 @@ function typoControls(node) {
       icons: ['<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M4 12h10M4 18h13"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M7 12h10M5 18h14"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M10 12h10M7 18h13"/></svg>', '<svg viewBox="0 0 24 24" class="ic"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'],
     }),
     styleField(node, 'Transform', 'text-transform', 'select', { options: ['', 'none', 'uppercase', 'lowercase', 'capitalize'] }),
+    styleField(node, 'Wrapping', 'text-wrap', 'select', { options: ['', 'wrap', 'balance', 'pretty', 'nowrap', 'stable'] }),
+    styleField(node, 'White space', 'white-space', 'select', { options: ['', 'normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line'] }),
+    styleField(node, 'Word break', 'word-break', 'select', { options: ['', 'normal', 'break-word', 'break-all', 'keep-all'] }),
+    styleField(node, 'Overflow wrap', 'overflow-wrap', 'select', { options: ['', 'normal', 'break-word', 'anywhere'] }),
+    styleField(node, 'Hyphens', 'hyphens', 'select', { options: ['', 'none', 'manual', 'auto'] }),
+    clampControl(node),
   ];
+}
+/* truncate to N lines (sets the -webkit-line-clamp bundle as one action) */
+function clampControl(node) {
+  const cur = effectiveStyle(node, store.viewport)['-webkit-line-clamp'] || '';
+  const wrap = document.createElement('div'); wrap.className = 'range-ctl';
+  const r = document.createElement('input'); r.type = 'range'; r.min = 0; r.max = 10; r.step = 1; r.value = cur || 0;
+  const n = document.createElement('input'); n.className = 'ctl range-num'; n.type = 'number'; n.value = cur || 0; n.title = '0 = off';
+  const apply = (v, soft) => {
+    const lines = +v;
+    const patch = lines > 0
+      ? { display: '-webkit-box', '-webkit-box-orient': 'vertical', '-webkit-line-clamp': String(lines), overflow: 'hidden' }
+      : { display: null, '-webkit-box-orient': null, '-webkit-line-clamp': null, overflow: null };
+    store.updateStyle(node.id, patch, store.viewport, soft ? { soft: true } : {});
+  };
+  r.addEventListener('input', () => { n.value = r.value; apply(r.value, true); });
+  r.addEventListener('change', () => apply(r.value));
+  n.addEventListener('change', () => { r.value = n.value; apply(n.value); });
+  wrap.append(r, n);
+  return field('Clamp lines', wrap);
 }
 function bgControls(node) {
   return [
