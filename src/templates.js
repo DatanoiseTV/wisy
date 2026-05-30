@@ -471,6 +471,91 @@ export const TEMPLATES = [
     ]),
   },
   {
+    id: 'gallery', name: 'Media library', tag: 'Gallery', category: 'Content', theme: 'midnight',
+    thumb: gthumb('#070b14', '#3b82f6', 'grid', true),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'STREAMA', links: 'Movies, Shows, Music, Photos', cta: 'Profile', variant: 'glass' }),
+      comp('section', {}, { padding: '32px 24px', 'max-width': 'calc(var(--container) + 80px)', margin: '0 auto', width: '100%', gap: '26px', 'align-items': 'stretch' }, [
+        comp('heading', { text: 'Continue watching', level: '2' }, { 'font-size': 'var(--fs-lg)' }),
+        comp('gallery', { cols: 5, gap: 12 }),
+        comp('heading', { text: 'Recently added', level: '2' }, { 'font-size': 'var(--fs-lg)' }),
+        comp('gallery', { cols: 5, gap: 12 }),
+        comp('heading', { text: 'Your music', level: '2' }, { 'font-size': 'var(--fs-lg)' }),
+        comp('gallery', { cols: 6, gap: 12 }),
+      ]),
+      comp('footer', { brand: 'STREAMA' }),
+    ]),
+  },
+  {
+    id: 'musicapp', name: 'Music player', tag: 'App', category: 'App', theme: 'synth',
+    thumb: gthumb('#0a0c10', '#22d3ee', 'split', true),
+    build: () => pageRoot([
+      comp('appbar', { title: 'Now Playing', left: 'layers', right: 'heart' }),
+      comp('section', {}, { padding: '24px', gap: '22px', 'align-items': 'center', flex: '1', background: 'radial-gradient(130% 90% at 50% 0, color-mix(in srgb,var(--color-primary) 22%,var(--color-bg)), var(--color-bg))' }, [
+        anim(comp('image', { alt: 'Album art' }, { width: '260px', height: '260px', 'border-radius': 'var(--radius-lg)', 'box-shadow': 'var(--shadow-lg)' }), 'zoom-in'),
+        comp('stack', {}, { gap: '4px', 'align-items': 'center' }, [
+          comp('heading', { text: 'Midnight Drive', level: '2' }),
+          comp('text', { text: 'The Lumens · Neon Fields' }, { color: 'var(--color-muted)', margin: '0' }),
+        ]),
+        comp('audioplayer', { title: 'Midnight Drive', artist: 'The Lumens' }, { width: '100%', 'max-width': '420px' }),
+      ]),
+      comp('tabbar', { items: 'globe|Home\nlayers|Search\nmusic|Library\nheart|You', active: 3 }),
+    ], { 'max-width': '420px', margin: '0 auto', 'box-shadow': 'var(--shadow-lg)', 'min-height': '100vh' }),
+  },
+  {
+    id: 'blog', name: 'Blog', tag: 'Magazine', category: 'Content', theme: 'editorial',
+    thumb: gthumb('#faf7f2', '#c2410c', 'grid'),
+    pages: () => secondaryPages('The Journal', 'Articles, Topics, About'),
+    build: () => pageRoot([
+      comp('navbar', { brand: 'The Journal', links: 'Design, Engineering, Culture', cta: 'Subscribe', variant: 'minimal' }),
+      comp('section', {}, { padding: '48px 24px 24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%', gap: '6px', 'align-items': 'flex-start' }, [
+        comp('badge', { text: 'Featured', variant: 'soft' }),
+        comp('heading', { text: 'On the quiet discipline of shipping', level: '1' }, { 'font-size': 'var(--fs-3xl)', 'max-width': '20ch' }),
+        comp('text', { text: 'A field guide to finishing — and why constraints make better work.' }, { 'font-size': '1.2rem', color: 'var(--color-muted)' }),
+      ]),
+      comp('section', {}, { padding: '24px', 'max-width': 'var(--container)', margin: '0 auto', width: '100%' }, [
+        comp('grid', { cols: 3 }, { 'grid-template-columns': 'repeat(3,minmax(0,1fr))', gap: '24px' },
+          [['Design', 'The shape of good defaults'], ['Engineering', 'Boring tech, happy teams'], ['Culture', 'Async, done right'], ['Design', 'Type that breathes'], ['Engineering', 'The cost of cleverness'], ['Culture', 'Writing as thinking']].map(([t, ti]) => postCard(t, ti))),
+      ]),
+      comp('footer', { brand: 'The Journal' }),
+    ]),
+  },
+  {
+    id: 'techblog', name: 'Tech blog', tag: 'Developer', category: 'Content', theme: 'cobalt',
+    thumb: gthumb('#0b1220', '#38bdf8', 'list', true),
+    build: () => pageRoot([
+      comp('navbar', { brand: '~/devlog', links: 'Posts, Tags, RSS', cta: 'GitHub', variant: 'solid' }),
+      comp('section', {}, { padding: '40px 24px', 'max-width': '760px', margin: '0 auto', width: '100%', gap: '16px', 'align-items': 'stretch' }, [
+        comp('heading', { text: 'Latest posts', level: '1' }, { 'font-size': 'var(--fs-2xl)' }),
+        postRow('Building a zero-dependency renderer', 'May 28 · 8 min', 'architecture'),
+        postRow('OKLCH is the color space you want', 'May 21 · 6 min', 'design'),
+        postRow('Custom elements without the framework', 'May 14 · 11 min', 'webcomponents'),
+        postRow('Shipping fast with constraints', 'May 7 · 5 min', 'process'),
+      ]),
+      comp('footer', { brand: '~/devlog' }),
+    ]),
+  },
+  {
+    id: 'ghpages', name: 'OSS Project', tag: 'GitHub Pages', category: 'Content', theme: 'noir',
+    thumb: gthumb('#0a0a0a', '#fafafa', 'hero', true),
+    pages: () => [
+      { name: 'Docs', build: () => pageRoot([navFor('wisy', 'Docs, API, GitHub'), comp('section', {}, { padding: '56px 24px', 'max-width': '760px', margin: '0 auto', width: '100%', gap: '14px', 'align-items': 'stretch' }, [comp('heading', { text: 'Documentation', level: '1' }), comp('text', { text: '## Getting started\n\nInstall and run in seconds:\n\n```bash\nnpm i wisy\n```\n\n- No build step\n- Zero dependencies\n- Ships clean HTML/CSS/JS' }), comp('accordion', {})]), comp('footer', { brand: 'wisy' })]) },
+    ],
+    build: () => pageRoot([
+      comp('navbar', { brand: 'wisy', links: 'Docs, API, Examples', cta: 'Star on GitHub', variant: 'minimal' }),
+      comp('section', {}, { padding: '96px 24px', 'align-items': 'center', gap: '20px' }, [
+        anim(comp('row', {}, { gap: '8px', 'justify-content': 'center' }, [comp('badge', { text: 'v2.0', variant: 'outline' }), comp('badge', { text: 'MIT', variant: 'outline' }), comp('badge', { text: 'build passing', variant: 'soft' })]), 'fade'),
+        anim(comp('heading', { text: 'The zero-dependency design studio', level: '1' }, { 'text-align': 'center', 'font-size': 'clamp(2.4rem,6vw,4.5rem)', 'max-width': '18ch' }), 'rise', 80),
+        anim(comp('text', { text: 'Open source. Self-hostable. Ships clean code.' }, { 'text-align': 'center', color: 'var(--color-muted)' }), 'fade-up', 160),
+        anim(comp('embed', { html: '<pre style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 20px;font-family:var(--font-mono);color:var(--color-strong);font-size:.95rem">$ npx wisy<span style="opacity:.5"> # opens the studio</span></pre>' }), 'fade-up', 240),
+        anim(comp('row', {}, { gap: '12px', 'justify-content': 'center' }, [comp('button', { text: 'Get started', variant: 'primary', size: 'lg' }), comp('button', { text: 'Star 12.4k', variant: 'outline', size: 'lg' })]), 'fade-up', 320),
+      ]),
+      animAll(comp('feature', { title: 'Why wisy', cols: 4, items: 'bolt|Fast|No build, instant load.\nshield|Yours|MIT, no lock-in.\nlayers|Composable|45+ components.\nrocket|Ships clean|Valid HTML/CSS/JS.' })),
+      comp('cta', { title: 'Star it on GitHub', subtitle: 'Free and open source forever.', button: 'View repository' }),
+      comp('footer', { brand: 'wisy', tagline: 'MIT licensed · built in the open.' }),
+    ]),
+  },
+  {
     id: 'blank', name: 'Blank', tag: 'Start fresh', category: 'Blank', theme: null,
     thumb: thumbBlank(),
     build: () => pageRoot([
@@ -564,6 +649,25 @@ function episodeRow(n, title, dur) {
     comp('icon', { icon: 'outline:music', size: 22 }, { color: 'var(--color-primary)' }),
     comp('heading', { text: title, level: '4' }, { 'font-size': '1rem', 'font-weight': '500', flex: '1' }),
     comp('text', { text: dur }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
+  ]);
+}
+function postCard(tag, title) {
+  return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
+    comp('image', { alt: title }, { 'border-radius': '0', 'aspect-ratio': '16/10' }),
+    comp('stack', {}, { padding: '18px', gap: '8px' }, [
+      comp('badge', { text: tag, variant: 'soft' }, { 'align-self': 'flex-start' }),
+      comp('heading', { text: title, level: '3' }, { 'font-size': '1.25rem' }),
+      comp('text', { text: 'A short, inviting excerpt that makes you want to read the whole thing.' }, { color: 'var(--color-muted)', 'font-size': '.92rem', margin: '0' }),
+    ]),
+  ]), 'fade-up');
+}
+function postRow(title, meta, tag) {
+  return comp('row', {}, { 'align-items': 'center', gap: '14px', padding: '16px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'flex-wrap': 'wrap' }, [
+    comp('stack', {}, { gap: '4px', flex: '1', 'min-width': '200px' }, [
+      comp('heading', { text: title, level: '3' }, { 'font-size': '1.1rem' }),
+      comp('text', { text: meta }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0', 'font-family': 'var(--font-mono)' }),
+    ]),
+    comp('badge', { text: '#' + tag, variant: 'outline' }),
   ]);
 }
 function speakerCard(name, org) {

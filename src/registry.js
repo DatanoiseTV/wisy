@@ -867,6 +867,22 @@ def('tabbar', {
 });
 
 /* === ADVANCED === */
+def('repeater', {
+  label: 'Repeater', group: 'Layout', icon: 'grid', container: true, repeat: true,
+  props: [
+    { key: 'count', label: 'Repeat ×', type: 'range', min: 1, max: 24, step: 1 },
+    { key: 'layout', label: 'Layout', type: 'select', options: ['grid', 'row', 'column'] },
+    { key: 'cols', label: 'Columns', type: 'range', min: 1, max: 6, step: 1 },
+  ],
+  defaultProps: { count: 3, layout: 'grid', cols: 3 },
+  defaultStyle: { display: 'grid', 'grid-template-columns': 'repeat(3, minmax(0,1fr))', gap: '16px' },
+  render: (n) => {
+    const el = h('div', { class: 'wc-repeater' });
+    if (n.props.layout === 'grid') { el.style.display = 'grid'; el.style.gridTemplateColumns = `repeat(${n.props.cols || 3}, minmax(0,1fr))`; }
+    else { el.style.display = 'flex'; el.style.flexDirection = n.props.layout === 'row' ? 'row' : 'column'; }
+    return el;
+  },
+});
 def('card', {
   label: 'Card', group: 'Layout', icon: 'card', container: true,
   props: [],
