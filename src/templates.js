@@ -7,15 +7,16 @@ import { store, makeNode, uid } from './state.js';
 import { makeComponent } from './registry.js';
 import { THEME_PRESETS } from './themes.js';
 import { confirmDialog } from './dialog.js';
+import { EXTRA_TEMPLATES } from './templates-extra.js';
 
-function comp(type, props = {}, style = {}, children = []) {
+export function comp(type, props = {}, style = {}, children = []) {
   const n = makeComponent(type);
   Object.assign(n.props, props);
   Object.assign(n.style.base, style);
   if (children.length) n.children = children;
   return n;
 }
-function pageRoot(children, style = {}) {
+export function pageRoot(children, style = {}) {
   const root = makeNode('section', {}, { padding: '0', gap: '0', 'align-items': 'stretch', width: '100%', display: 'flex', 'flex-direction': 'column', ...style });
   root.name = 'Page Root';
   root.children = children;
@@ -566,8 +567,9 @@ export const TEMPLATES = [
     ]),
   },
 ];
+TEMPLATES.push(...EXTRA_TEMPLATES);
 
-function workCard(title, tag) {
+export function workCard(title, tag) {
   return comp('card', {}, { padding: '0', overflow: 'hidden', gap: '0' }, [
     comp('image', { alt: title }, { 'border-radius': '0', 'aspect-ratio': '4/3' }),
     comp('stack', {}, { padding: '18px', gap: '4px' }, [
@@ -576,7 +578,7 @@ function workCard(title, tag) {
     ]),
   ]);
 }
-function appRow(title, meta) {
+export function appRow(title, meta) {
   return comp('row', {}, { 'align-items': 'center', gap: '12px', 'background-color': 'var(--color-bg)', padding: '12px', 'border-radius': 'var(--radius)', border: '1px solid var(--color-border)' }, [
     comp('icon', { icon: 'outline:music', size: 22 }, {}),
     comp('stack', {}, { gap: '2px', flex: '1' }, [
@@ -588,9 +590,9 @@ function appRow(title, meta) {
 }
 
 /* ---- composition helpers ---- */
-function anim(node, type, delay = 0) { node.anim = { type, duration: 650, delay, trigger: 'inview' }; return node; }
-function animAll(node) { node.anim = { type: 'fade-up', duration: 650, trigger: 'inview' }; return node; }
-function kpi(label, value, delta) {
+export function anim(node, type, delay = 0) { node.anim = { type, duration: 650, delay, trigger: 'inview' }; return node; }
+export function animAll(node) { node.anim = { type: 'fade-up', duration: 650, trigger: 'inview' }; return node; }
+export function kpi(label, value, delta) {
   const up = !String(delta).startsWith('-');
   return anim(comp('card', {}, { gap: '6px', padding: '18px' }, [
     comp('text', { text: label }, { color: 'var(--color-muted)', 'font-size': '.82rem', margin: '0', 'text-transform': 'uppercase', 'letter-spacing': '.04em' }),
@@ -600,7 +602,7 @@ function kpi(label, value, delta) {
 }
 function bar(pct) { return comp('stack', {}, { flex: '1', height: pct + '%', 'background-color': 'var(--color-primary)', 'border-radius': '6px 6px 0 0', 'align-self': 'flex-end', opacity: '.85' }); }
 function barRow() { return [42, 68, 54, 88, 63, 79, 48, 73, 60, 92].map(bar); }
-function channelStrip(name, fader) {
+export function channelStrip(name, fader) {
   return comp('stack', {}, { 'align-items': 'center', gap: '12px', padding: '16px 12px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'min-width': '92px' }, [
     comp('knob', { label: 'Pan', value: 50, size: 48, 'show-value': false }),
     comp('row', {}, { gap: '10px', 'align-items': 'flex-end' }, [
@@ -611,14 +613,14 @@ function channelStrip(name, fader) {
     comp('heading', { text: name, level: '4' }, { 'font-size': '.8rem', 'letter-spacing': '.08em', 'text-transform': 'uppercase', color: 'var(--color-muted)' }),
   ]);
 }
-function stepRow(lbl) {
+export function stepRow(lbl) {
   const pat = { BD: [1, 0, 0, 0, 1, 0, 0, 0], SD: [0, 0, 1, 0, 0, 0, 1, 0], HH: [1, 1, 1, 1, 1, 1, 1, 1], CP: [0, 0, 0, 0, 1, 0, 0, 0] }[lbl] || [];
   return comp('row', {}, { 'align-items': 'center', gap: '8px', 'flex-wrap': 'nowrap' }, [
     comp('heading', { text: lbl, level: '5' }, { 'font-size': '.72rem', width: '34px', color: 'var(--color-muted)', 'letter-spacing': '.08em' }),
     ...pat.map((on) => comp('toggle', { label: '', on: !!on, color: 'var(--color-accent)' })),
   ]);
 }
-function productCard(name, price) {
+export function productCard(name, price) {
   return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
     comp('image', { alt: name }, { 'border-radius': '0', 'aspect-ratio': '4/5' }),
     comp('stack', {}, { padding: '14px', gap: '4px' }, [
@@ -627,7 +629,7 @@ function productCard(name, price) {
     ]),
   ]), 'fade-up');
 }
-function listingCard(price, addr) {
+export function listingCard(price, addr) {
   return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
     comp('image', { alt: addr }, { 'border-radius': '0', 'aspect-ratio': '3/2' }),
     comp('stack', {}, { padding: '16px', gap: '6px' }, [
@@ -637,13 +639,13 @@ function listingCard(price, addr) {
     ]),
   ]), 'fade-up');
 }
-function menuItem(name, price) {
+export function menuItem(name, price) {
   return comp('row', {}, { 'align-items': 'baseline', gap: '12px', 'border-bottom': '1px solid var(--color-border)', padding: '12px 0', 'flex-wrap': 'nowrap' }, [
     comp('heading', { text: name, level: '4' }, { 'font-size': '1.05rem', 'font-weight': '500', flex: '1' }),
     comp('heading', { text: price, level: '4' }, { 'font-size': '1.05rem', color: 'var(--color-primary)' }),
   ]);
 }
-function episodeRow(n, title, dur) {
+export function episodeRow(n, title, dur) {
   return comp('row', {}, { 'align-items': 'center', gap: '14px', padding: '14px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'flex-wrap': 'nowrap' }, [
     comp('heading', { text: n, level: '4' }, { 'font-size': '1.1rem', color: 'var(--color-muted)', width: '36px' }),
     comp('icon', { icon: 'outline:music', size: 22 }, { color: 'var(--color-primary)' }),
@@ -651,7 +653,7 @@ function episodeRow(n, title, dur) {
     comp('text', { text: dur }, { color: 'var(--color-muted)', 'font-size': '.85rem', margin: '0' }),
   ]);
 }
-function postCard(tag, title) {
+export function postCard(tag, title) {
   return anim(comp('card', {}, { padding: '0', gap: '0', overflow: 'hidden' }, [
     comp('image', { alt: title }, { 'border-radius': '0', 'aspect-ratio': '16/10' }),
     comp('stack', {}, { padding: '18px', gap: '8px' }, [
@@ -661,7 +663,7 @@ function postCard(tag, title) {
     ]),
   ]), 'fade-up');
 }
-function postRow(title, meta, tag) {
+export function postRow(title, meta, tag) {
   return comp('row', {}, { 'align-items': 'center', gap: '14px', padding: '16px', 'background-color': 'var(--color-surface)', border: '1px solid var(--color-border)', 'border-radius': 'var(--radius)', 'flex-wrap': 'wrap' }, [
     comp('stack', {}, { gap: '4px', flex: '1', 'min-width': '200px' }, [
       comp('heading', { text: title, level: '3' }, { 'font-size': '1.1rem' }),
@@ -670,7 +672,7 @@ function postRow(title, meta, tag) {
     comp('badge', { text: '#' + tag, variant: 'outline' }),
   ]);
 }
-function speakerCard(name, org) {
+export function speakerCard(name, org) {
   return anim(comp('card', {}, { 'align-items': 'center', gap: '10px', 'text-align': 'center' }, [
     comp('icon', { icon: 'outline:star', size: 30 }, { width: '64px', height: '64px', 'border-radius': '50%', background: 'color-mix(in srgb,var(--color-primary) 16%,transparent)', color: 'var(--color-primary)' }),
     comp('heading', { text: name, level: '4' }, { 'font-size': '1.05rem' }),
@@ -679,7 +681,7 @@ function speakerCard(name, org) {
 }
 
 /* ---- compact thumbnail generator ---- */
-function gthumb(bg, accent, kind, dark) {
+export function gthumb(bg, accent, kind, dark) {
   const muted = dark ? '#2a2a30' : 'rgba(120,130,150,.25)';
   const card = dark ? '#16161c' : 'rgba(255,255,255,.9)';
   const txt = dark ? '#e8e8ee' : '#10141b';
@@ -740,7 +742,7 @@ export function initTemplatesPanel() {
 }
 
 /* secondary pages shared by marketing templates so an export ships a real site */
-function secondaryPages(brand, links) {
+export function secondaryPages(brand, links) {
   return [
     { name: 'About', build: () => pageRoot([
       navFor(brand, links), comp('hero', { eyebrow: 'About us', title: `The story behind ${brand}`, subtitle: 'We started with a simple belief: software should respect the people who use it.', primary: 'Join the team', secondary: 'Our values', variant: 'plain', align: 'left' }),
@@ -758,7 +760,7 @@ function secondaryPages(brand, links) {
     ]) },
   ];
 }
-function navFor(brand, links) { return comp('navbar', { brand, links: links || 'Product, Pricing, About', cta: 'Sign in', variant: 'solid' }); }
+export function navFor(brand, links) { return comp('navbar', { brand, links: links || 'Product, Pricing, About', cta: 'Sign in', variant: 'solid' }); }
 
 export function applyTemplate(tpl) {
   store.transaction(() => {
