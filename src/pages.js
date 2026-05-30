@@ -3,6 +3,7 @@
    node tree. Add, rename, duplicate, delete, reorder, switch.
    ============================================================ */
 import { store, makeNode, uid, cloneNode } from './state.js';
+import { confirmDialog } from './dialog.js';
 
 let host;
 
@@ -60,9 +61,11 @@ function pageCard(p) {
     store.transaction(() => { const i = store.doc.pages.indexOf(p); store.doc.pages.splice(i + 1, 0, copy); });
     store.setActivePage(copy.id);
   };
-  card.querySelector('[data-act="del"]').onclick = (e) => {
+  card.querySelector('[data-act="del"]').onclick = async (e) => {
     e.stopPropagation();
-    if (store.doc.pages.length === 1) return;
+    if (store.doc.pages.length === 1) { window.__wisyToast?.('A project needs at least one page', 'err'); return; }
+    const ok = await confirmDialog('Delete page?', { message: `“${p.name}” and its contents will be removed. You can undo this.`, confirmText: 'Delete page', danger: true });
+    if (!ok) return;
     const i = store.doc.pages.indexOf(p);
     store.transaction(() => store.doc.pages.splice(i, 1));
     if (store.doc.activePageId === p.id) store.setActivePage(store.doc.pages[Math.max(0, i - 1)].id);

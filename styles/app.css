@@ -409,3 +409,20 @@ select.ctl { appearance: none; background-image: url("data:image/svg+xml,%3Csvg 
 .theme-preset__name { font-size: 11px; color: var(--txt-1); }
 
 kbd { font-family: var(--mono); font-size: 10.5px; background: var(--bg-3); border: 1px solid var(--bg-4); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--txt-2); }
+
+/* dialogs */
+.dlg-layer { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; }
+.dlg-layer[hidden] { display: none; }
+.dlg-back { position: absolute; inset: 0; background: rgba(5,7,11,.6); backdrop-filter: blur(3px); }
+.dlg-card { position: relative; width: min(420px, 90vw); background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-3); padding: 20px; opacity: 0; transform: translateY(8px) scale(.98); transition: opacity .14s var(--ease), transform .14s var(--ease); }
+.dlg-card.in { opacity: 1; transform: none; }
+.dlg-head { display: flex; gap: 13px; align-items: flex-start; }
+.dlg-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; }
+.dlg-ic svg { width: 20px; height: 20px; }
+.dlg-ic.is-danger { background: rgba(255,107,107,.14); color: var(--danger); }
+.dlg-titles h3 { margin: 0 0 5px; font-size: 15px; color: var(--txt-0); }
+.dlg-titles p { margin: 0; font-size: 13px; color: var(--txt-2); line-height: 1.5; }
+.dlg-input { margin-top: 14px; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.btn--danger-solid { background: var(--danger); border-color: var(--danger); color: #fff; font-weight: 600; }
+.btn--danger-solid:hover { filter: brightness(1.08); color: #fff; }

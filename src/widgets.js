@@ -350,3 +350,52 @@
   reg('wisy-meter', WisyMeter);
   reg('wisy-stepper', WisyStepper);
 })();
+
+/* ============================================================
+   Animation runtime — reveals [data-anim] elements on scroll.
+   Auto-activates everywhere EXCEPT the editor canvas (which sets
+   data-wisy-editor on <html>); there it waits for WisyAnim.replay().
+   ============================================================ */
+(function () {
+  if (window.__wisyAnim) return;
+  window.__wisyAnim = true;
+  const isEditor = () => document.documentElement.hasAttribute('data-wisy-editor');
+  let io = null;
+  function observer() {
+    if (io || !('IntersectionObserver' in window)) return io;
+    io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('wc-inview'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    return io;
+  }
+  function scan() {
+    const obs = observer();
+    document.querySelectorAll('[data-anim]').forEach((el) => {
+      if (el.__wa) return; el.__wa = true;
+      if (el.getAttribute('data-anim-trigger') === 'load' || !obs) el.classList.add('wc-inview');
+      else obs.observe(el);
+    });
+  }
+  function activate() {
+    document.documentElement.classList.add('wc-anim-on');
+    scan();
+    try {
+      const mo = new MutationObserver(() => scan());
+      mo.observe(document.body, { childList: true, subtree: true });
+    } catch { /* */ }
+  }
+  window.WisyAnim = {
+    rescan: scan,
+    replay() {
+      document.documentElement.classList.add('wc-anim-on');
+      const els = [...document.querySelectorAll('[data-anim]')];
+      els.forEach((el) => { el.classList.remove('wc-inview'); el.__wa = true; });
+      // force reflow so the hidden 0% frame applies before replaying
+      void document.body.offsetWidth;
+      requestAnimationFrame(() => els.forEach((el) => el.classList.add('wc-inview')));
+    },
+  };
+  const start = () => { if (!isEditor()) activate(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();

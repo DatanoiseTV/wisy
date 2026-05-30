@@ -50,6 +50,7 @@ function render() {
   host.append(section('Typography', typoControls(node)));
   host.append(section('Background & Border', bgControls(node)));
   host.append(section('Effects', effectControls(node)));
+  host.append(section('Animation', animControls(node)));
 }
 
 /* ---------- header ---------- */
@@ -296,6 +297,27 @@ function bgControls(node) {
     styleField(node, 'Shadow', 'box-shadow', 'text', { placeholder: 'var(--shadow)' }),
   ];
 }
+function animControls(node) {
+  const a = node.anim || {};
+  const set = (patch) => store.updateAnim(node.id, patch);
+  const out = [];
+  const TYPES = ['none', 'fade', 'fade-up', 'fade-down', 'fade-left', 'fade-right', 'zoom-in', 'zoom-out', 'rise', 'blur-in', 'flip'];
+  out.push(field('Entrance', selectCtl(() => a.type || 'none', (v) => set({ type: v }), TYPES)));
+  if (a.type && a.type !== 'none') {
+    out.push(field('Trigger', selectCtl(() => a.trigger || 'inview', (v) => set({ trigger: v }), ['inview', 'load'])));
+    out.push(field('Duration', rangeCtl(() => a.duration ?? 700, (v) => set({ duration: v }), { min: 100, max: 2000, step: 50 })));
+    out.push(field('Delay', rangeCtl(() => a.delay ?? 0, (v) => set({ delay: v }), { min: 0, max: 1500, step: 50 })));
+    out.push(field('Easing', selectCtl(() => a.easing || 'spring', (v) => set({ easing: v }), ['spring', 'ease-out', 'ease-in-out', 'back', 'linear'])));
+  }
+  out.push(field('Hover', selectCtl(() => a.hover || 'none', (v) => set({ hover: v }), ['none', 'lift', 'grow', 'sink', 'glow', 'tilt'])));
+  const replay = document.createElement('button');
+  replay.className = 'btn btn--ghost'; replay.style.cssText = 'width:100%;justify-content:center;margin-top:2px';
+  replay.innerHTML = '<svg viewBox="0 0 24 24" class="ic" style="width:15px;height:15px"><path d="M5 3l14 9-14 9z"/></svg> Replay animations';
+  replay.onclick = () => store.emit('anim:preview');
+  out.push(replay);
+  return out;
+}
+
 function effectControls(node) {
   return [
     styleField(node, 'Opacity', 'opacity', 'range', { min: 0, max: 1, step: 0.05 }),

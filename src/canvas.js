@@ -17,6 +17,13 @@ let hoverWid = null;
 let dragState = null;
 let userZoom = null;        // null → auto-fit width; number → manual
 const ZMIN = 0.1, ZMAX = 4;
+let animCleanup = null;
+function clearAnimState() {
+  try {
+    fdoc.documentElement.classList.remove('wc-anim-on');
+    fdoc.querySelectorAll('[data-anim]').forEach((el) => { el.classList.remove('wc-inview'); el.__wa = false; });
+  } catch { /* */ }
+}
 
 const widgetsCssUrl = new URL('../styles/widgets.css', import.meta.url).href;
 const widgetsJsUrl = new URL('./widgets.js', import.meta.url).href;
@@ -30,7 +37,7 @@ export function initCanvas() {
   emptyEl = document.getElementById('stage-empty');
   zoomVal = document.getElementById('zoom-val');
 
-  const skeleton = `<!DOCTYPE html><html><head><meta charset="utf-8">
+  const skeleton = `<!DOCTYPE html><html data-wisy-editor><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link id="wisy-fonts" rel="stylesheet" href="">
 <link rel="stylesheet" href="${widgetsCssUrl}">
@@ -57,6 +64,13 @@ export function initCanvas() {
   store.on('select', drawSelection);
   store.on('theme:change', () => { applyTheme(); });
   store.on('page:change', () => { setTimeout(renderDoc, 0); });
+  store.on('anim:preview', () => {
+    requestAnimationFrame(() => {
+      fwin?.WisyAnim?.replay();
+      clearTimeout(animCleanup);
+      animCleanup = setTimeout(clearAnimState, 2800);
+    });
+  });
 
   window.addEventListener('resize', () => { applyZoom(); drawSelection(); });
   stageScroll.addEventListener('scroll', () => drawSelection());
@@ -81,6 +95,7 @@ export function renderDoc() {
     : mount.append(renderNode(store.root, { editor: true }));
   applyTheme();
   sDoc.textContent = buildDocCss(store.root);
+  clearAnimState(); // keep designer view static; animations play via Replay/preview
   // let custom elements + layout settle, then size the frame to content
   requestAnimationFrame(() => { sizeFrame(); drawSelection(); });
   const total = countNodes(store.root);
@@ -450,4 +465,5 @@ function onWindowDragUp(e) {
   }
 }
 
+export function previewAnimations() { fwin?.WisyAnim?.replay(); }
 export function getFrame() { return { fdoc, fwin }; }

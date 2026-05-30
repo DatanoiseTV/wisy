@@ -138,6 +138,13 @@ class Store {
     }, opts);
   }
   rename(id, name, opts = {}) { this.transaction(() => { const r = this.findNode(id); if (r) r.node.name = name; }, { rerender: false, ...opts }); }
+  updateAnim(id, patch, opts = {}) {
+    this.transaction(() => {
+      const r = this.findNode(id); if (!r) return;
+      r.node.anim = { ...(r.node.anim || {}), ...patch };
+    }, opts);
+    this.emit('anim:preview');
+  }
 
   insert(node, parentId, index = -1) {
     this.transaction(() => {

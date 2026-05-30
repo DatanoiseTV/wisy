@@ -14,6 +14,7 @@ export function renderNode(node, ctx = {}) {
   if (!el || el.nodeType !== 1) return el;
   el.classList.add('n-' + node.id);
   if (ctx.editor) el.setAttribute('data-wid', node.id);
+  applyAnim(el, node.anim);
 
   if (d.container) {
     const slot = d.slot ? el.querySelector(d.slot) : el;
@@ -24,6 +25,26 @@ export function renderNode(node, ctx = {}) {
     }
   }
   return el;
+}
+
+/* ---- animation attributes ---- */
+const EASINGS = {
+  spring: 'cubic-bezier(.16,.84,.44,1)',
+  'ease-out': 'cubic-bezier(.16,1,.3,1)',
+  'ease-in-out': 'cubic-bezier(.65,0,.35,1)',
+  linear: 'linear',
+  back: 'cubic-bezier(.34,1.56,.64,1)',
+};
+function applyAnim(el, anim) {
+  if (!anim) return;
+  if (anim.type && anim.type !== 'none') {
+    el.setAttribute('data-anim', anim.type);
+    if (anim.trigger === 'load') el.setAttribute('data-anim-trigger', 'load');
+    if (anim.duration) el.style.setProperty('--anim-dur', anim.duration + 'ms');
+    if (anim.delay) el.style.setProperty('--anim-delay', anim.delay + 'ms');
+    if (anim.easing && EASINGS[anim.easing]) el.style.setProperty('--anim-ease', EASINGS[anim.easing]);
+  }
+  if (anim.hover && anim.hover !== 'none') el.classList.add('wc-hov-' + anim.hover);
 }
 
 /* ---- per-node CSS ---- */
@@ -206,6 +227,37 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 .wc-tabbar__item.is-active{color:var(--color-primary)}
 
 .wc-divider{border:0}
+
+/* ---- animations ---- */
+@keyframes wcFade{from{opacity:0}to{opacity:1}}
+@keyframes wcFadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes wcFadeDown{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:none}}
+@keyframes wcFadeLeft{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes wcFadeRight{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes wcZoomIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+@keyframes wcZoomOut{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+@keyframes wcRise{from{opacity:0;transform:translateY(44px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes wcBlurIn{from{opacity:0;filter:blur(12px)}to{opacity:1;filter:blur(0)}}
+@keyframes wcFlip{from{opacity:0;transform:perspective(700px) rotateX(-78deg)}to{opacity:1;transform:none}}
+.wc-anim-on [data-anim]{opacity:0;animation-duration:var(--anim-dur,.7s);animation-delay:var(--anim-delay,0s);animation-timing-function:var(--anim-ease,cubic-bezier(.16,.84,.44,1));animation-fill-mode:both;animation-play-state:paused;transform-origin:center}
+[data-anim="fade"]{animation-name:wcFade}
+[data-anim="fade-up"]{animation-name:wcFadeUp}
+[data-anim="fade-down"]{animation-name:wcFadeDown}
+[data-anim="fade-left"]{animation-name:wcFadeLeft}
+[data-anim="fade-right"]{animation-name:wcFadeRight}
+[data-anim="zoom-in"]{animation-name:wcZoomIn}
+[data-anim="zoom-out"]{animation-name:wcZoomOut}
+[data-anim="rise"]{animation-name:wcRise}
+[data-anim="blur-in"]{animation-name:wcBlurIn}
+[data-anim="flip"]{animation-name:wcFlip}
+.wc-anim-on [data-anim].wc-inview,.wc-anim-on [data-anim][data-anim-trigger="load"]{animation-play-state:running}
+.wc-hov-lift,.wc-hov-grow,.wc-hov-glow,.wc-hov-tilt,.wc-hov-sink{transition:transform .28s cubic-bezier(.16,.84,.44,1),box-shadow .28s ease,filter .28s ease}
+.wc-hov-lift:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.wc-hov-grow:hover{transform:scale(1.04)}
+.wc-hov-sink:hover{transform:translateY(3px) scale(.99)}
+.wc-hov-glow:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 35%,transparent),var(--shadow-lg)}
+.wc-hov-tilt:hover{transform:perspective(700px) rotateX(6deg) rotateY(-6deg)}
+@media (prefers-reduced-motion: reduce){.wc-anim-on [data-anim]{opacity:1!important;animation:none!important}}
 `;
 
 /* editor-only overlay css injected into iframe to show drop targets */

@@ -6,6 +6,7 @@
 import { store, makeNode } from './state.js';
 import { makeComponent } from './registry.js';
 import { THEME_PRESETS } from './themes.js';
+import { confirmDialog } from './dialog.js';
 
 function comp(type, props = {}, style = {}, children = []) {
   const n = makeComponent(type);
@@ -147,9 +148,12 @@ export function initTemplatesPanel() {
     const card = document.createElement('div'); card.className = 'tpl-card';
     card.innerHTML = `<div class="tpl-card__preview">${tpl.thumb}</div>
       <div class="tpl-card__foot"><span class="tpl-card__name">${tpl.name}</span><span class="tpl-card__tag">${tpl.tag}</span></div>`;
-    card.onclick = () => {
+    card.onclick = async () => {
       const has = (store.root?.children || []).length > 0;
-      if (has && !confirm(`Replace the current page with the “${tpl.name}” template?`)) return;
+      if (has) {
+        const ok = await confirmDialog('Apply template?', { message: `This replaces the contents of “${store.page.name}” with the ${tpl.name} template. You can undo this.`, confirmText: 'Apply template' });
+        if (!ok) return;
+      }
       applyTemplate(tpl);
     };
     list.append(card);
