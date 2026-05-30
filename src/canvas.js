@@ -184,6 +184,8 @@ export function setDevice(key) {
   const d = DEVICES[key];
   frame.classList.toggle('is-phone', d.kind === 'phone');
   frame.classList.toggle('is-tablet', d.kind === 'tablet');
+  frame.style.borderRadius = (d.radius != null ? d.radius : 8) + 'px';
+  overlay.style.borderRadius = (d.radius != null ? d.radius : 8) + 'px';
   if (ready) { sizeFrame(); requestAnimationFrame(() => { sizeFrame(); drawSelection(); }); }
   store.emit('device:change', key);
 }
@@ -239,8 +241,22 @@ function wireFrameEvents() {
   fdoc.addEventListener('mousemove', onFrameHover);
   fdoc.addEventListener('mouseleave', () => { hoverWid = null; clearHover(); });
   fdoc.addEventListener('dblclick', onFrameDblClick);
-  // block navigation on links/buttons inside canvas (except in Try mode)
-  fdoc.addEventListener('click', (e) => { if (tryMode) return; const a = e.target.closest('a,button,form'); if (a) e.preventDefault(); }, true);
+  // intercept navigation inside the canvas. In edit mode: block everything.
+  // In Try mode: route links sensibly but never let the iframe navigate to the editor app.
+  fdoc.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    const form = e.target.closest('form');
+    if (!tryMode) { if (a || e.target.closest('button') || form) e.preventDefault(); return; }
+    if (form) { e.preventDefault(); return; }
+    if (!a) return;
+    e.preventDefault();
+    const href = (a.getAttribute('href') || '').trim();
+    if (/^https?:\/\//i.test(href) || /^(mailto:|tel:)/i.test(href)) { window.open(href, '_blank', 'noopener'); return; }
+    const clean = href.replace(/^\.?\//, '');
+    const page = store.doc.pages.find((p) => p.path === clean);
+    if (page) { store.setActivePage(page.id); requestAnimationFrame(() => requestAnimationFrame(() => { fwin?.WisyAnim?.replay?.(); fwin?.WisyScroll?.refresh?.(); })); return; }
+    if (href.startsWith('#') && href.length > 1) { try { fdoc.querySelector(href)?.scrollIntoView({ behavior: 'smooth' }); } catch { /* */ } }
+  }, true);
   fdoc.addEventListener('keydown', (e) => { if (e.key === 'Escape') e.target.blur?.(); });
   // wheel over the canvas should pan/zoom the STAGE (not trap inside the iframe),
   // unless we're in a fixed-size device frame (then scroll inside the device).

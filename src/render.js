@@ -101,7 +101,7 @@ export function buildDocCss(root) {
 export const BASE_CSS = `
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:var(--font-ui);font-size:var(--text-base);line-height:var(--leading);color:var(--color-text);background:var(--color-bg);font-weight:var(--weight-body);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-feature-settings:"kern" 1,"liga" 1,"calt" 1;letter-spacing:var(--tracking)}
+body{margin:0;font-family:var(--font-ui);font-size:var(--text-base);line-height:var(--leading);color:var(--color-text);background:var(--bg-image, var(--color-bg));background-attachment:fixed;font-weight:var(--weight-body);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-feature-settings:"kern" 1,"liga" 1,"calt" 1;letter-spacing:var(--tracking)}
 h1,h2,h3,h4,h5,h6{font-family:var(--font-display);color:var(--color-strong);line-height:var(--leading-tight);letter-spacing:var(--tracking-tight);font-weight:var(--weight-heading);margin:0;text-wrap:balance}
 p{text-wrap:pretty}
 img{max-width:100%}

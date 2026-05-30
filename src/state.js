@@ -10,17 +10,17 @@ export const VIEWPORT_WIDTH = { desktop: 1280, tablet: 820, mobile: 390 };
    (constrained, internal scroll like a real device); no `h` ⇒ fluid height.
    `bp` is the responsive breakpoint category (drives media queries + inspector). */
 export const DEVICES = {
-  desktop: { label: 'Desktop', w: 1280, bp: 'desktop', kind: 'desktop' },
-  laptop: { label: 'Laptop · 1440', w: 1440, bp: 'desktop', kind: 'desktop' },
-  full: { label: 'Full HD · 1920', w: 1920, bp: 'desktop', kind: 'desktop' },
-  'ipad-pro': { label: 'iPad Pro 11″', w: 834, h: 1194, bp: 'tablet', kind: 'tablet' },
-  ipad: { label: 'iPad Air', w: 820, h: 1180, bp: 'tablet', kind: 'tablet' },
-  'ipad-mini': { label: 'iPad mini', w: 744, h: 1133, bp: 'tablet', kind: 'tablet' },
-  'iphone-15-pro-max': { label: 'iPhone 15 Pro Max', w: 430, h: 932, bp: 'mobile', kind: 'phone' },
-  'iphone-15': { label: 'iPhone 15 / 14', w: 393, h: 852, bp: 'mobile', kind: 'phone' },
-  'iphone-se': { label: 'iPhone SE', w: 375, h: 667, bp: 'mobile', kind: 'phone' },
-  'pixel-8': { label: 'Pixel 8', w: 412, h: 915, bp: 'mobile', kind: 'phone' },
-  'galaxy-s23': { label: 'Galaxy S23', w: 360, h: 780, bp: 'mobile', kind: 'phone' },
+  desktop: { label: 'Desktop', w: 1280, bp: 'desktop', kind: 'desktop', radius: 10 },
+  laptop: { label: 'Laptop · 1440', w: 1440, bp: 'desktop', kind: 'desktop', radius: 10 },
+  full: { label: 'Full HD · 1920', w: 1920, bp: 'desktop', kind: 'desktop', radius: 8 },
+  'ipad-pro': { label: 'iPad Pro 11″', w: 834, h: 1194, bp: 'tablet', kind: 'tablet', radius: 26 },
+  ipad: { label: 'iPad Air', w: 820, h: 1180, bp: 'tablet', kind: 'tablet', radius: 24 },
+  'ipad-mini': { label: 'iPad mini', w: 744, h: 1133, bp: 'tablet', kind: 'tablet', radius: 30 },
+  'iphone-15-pro-max': { label: 'iPhone 15 Pro Max', w: 430, h: 932, bp: 'mobile', kind: 'phone', radius: 56 },
+  'iphone-15': { label: 'iPhone 15 / 14', w: 393, h: 852, bp: 'mobile', kind: 'phone', radius: 48 },
+  'iphone-se': { label: 'iPhone SE', w: 375, h: 667, bp: 'mobile', kind: 'phone', radius: 14 },
+  'pixel-8': { label: 'Pixel 8', w: 412, h: 915, bp: 'mobile', kind: 'phone', radius: 28 },
+  'galaxy-s23': { label: 'Galaxy S23', w: 360, h: 780, bp: 'mobile', kind: 'phone', radius: 22 },
 };
 export const DEFAULT_DEVICE = { desktop: 'desktop', tablet: 'ipad', mobile: 'iphone-15' };
 

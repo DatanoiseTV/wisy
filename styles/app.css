@@ -67,8 +67,7 @@ input, textarea, select { font-family: inherit; }
 
 /* ---------- Top bar ---------- */
 .topbar {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 12px;
@@ -77,8 +76,9 @@ input, textarea, select { font-family: inherit; }
   z-index: 30;
 }
 .topbar__group { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.topbar__center { justify-self: center; }
-.topbar__actions { justify-self: end; }
+.topbar__brand { flex: 1 1 auto; min-width: 0; }
+.topbar__center { flex: 0 1 auto; min-width: 0; }
+.topbar__actions { flex: 1 1 auto; justify-content: flex-end; min-width: 0; }
 .brand { display: flex; align-items: center; gap: 8px; }
 .brand__mark { width: 26px; height: 26px; }
 .brand__name { font-weight: 700; letter-spacing: -0.01em; color: var(--txt-0); font-size: 15px; }
@@ -106,6 +106,7 @@ input, textarea, select { font-family: inherit; }
 .zoom-readout:hover { background: var(--bg-3); color: var(--txt-0); }
 .device-select { height: 32px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-md); color: var(--txt-1); font-size: 12px; padding: 0 26px 0 10px; max-width: 200px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b96a8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
 .device-select:hover { border-color: var(--bg-4); color: var(--txt-0); }
+.device-select { flex: 0 1 auto; min-width: 92px; text-overflow: ellipsis; }
 #btn-try.is-active { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
 
 .btn {
@@ -128,6 +129,16 @@ input, textarea, select { font-family: inherit; }
 .btn--danger:hover { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.4); color: var(--danger); }
 .btn:disabled { opacity: .4; pointer-events: none; }
 .topbar__divider { width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
+.btn--icon { width: 32px; padding: 0; justify-content: center; }
+.topbar__group { min-width: 0; }
+.topbar__actions { gap: 6px; }
+.topbar__file { display: flex; align-items: center; gap: 2px; }
+.doctitle-input { flex: 0 1 auto; min-width: 80px; }
+/* keep the toolbar from ever overlapping: collapse non-essentials as width drops */
+@media (max-width: 1340px) { .doctitle-input { display: none; } .device-select { max-width: 156px; } }
+@media (max-width: 1120px) { .brand__name { display: none; } .topbar__file { display: none; } }
+@media (max-width: 1040px) { #btn-try span, #btn-export span { display: none; } #btn-try, #btn-export { width: 34px; padding: 0; justify-content: center; } }
+@media (max-width: 960px) { .zoom-readout { display: none; } }
 
 /* ---------- Body grid ---------- */
 .body {
