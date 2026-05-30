@@ -7,7 +7,7 @@ import { store, effectiveStyle } from './state.js';
 import { REG, icoSvg } from './registry.js';
 import { FONT_OPTIONS } from './themes.js';
 import { iconSVG } from './iconlib.js';
-import { openIconPicker, openFontBrowser, openLinkPicker, openAssetPicker } from './pickers.js';
+import { openIconPicker, openFontBrowser, openLinkPicker, openAssetPicker, openCropModal } from './pickers.js';
 import { presetsFor } from './component-presets.js';
 
 let host;
@@ -50,6 +50,8 @@ function render() {
   if (def.props?.length) {
     host.append(section('Content', def.props.map((f) => propField(node, f))));
   }
+  // image-specific framing
+  if (node.type === 'image' || node.type === 'imageframe') host.append(section('Image', imageControls(node)));
   // style sections
   host.append(section('Layout', layoutControls(node, def)));
   host.append(section('Spacing', [spacingControl(node, 'padding'), spacingControl(node, 'margin')]));
@@ -551,8 +553,69 @@ function animControls(node) {
   return out;
 }
 
+/* ---------- image framing: fit + focus point + crop + transform ---------- */
+function imageControls(node) {
+  const out = [];
+  out.push(styleField(node, 'Object fit', 'object-fit', 'select', { options: ['cover', 'contain', 'fill', 'none', 'scale-down'] }));
+  out.push(field('Focus point', focusPad(node), true));
+  out.push(field('Aspect', textCtl(() => styleGet(node, 'aspect-ratio'), (v, s) => styleSet(node, 'aspect-ratio', v, s), 'e.g. 16/9')));
+  const cropBtn = document.createElement('button');
+  cropBtn.className = 'btn btn--ghost'; cropBtn.style.cssText = 'width:100%;justify-content:center';
+  cropBtn.innerHTML = '<svg viewBox="0 0 24 24" class="ic" style="width:15px;height:15px"><path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></svg> Crop image';
+  cropBtn.onclick = () => { const src = node.props.src; if (src) openCropModal(src, (v) => store.updateProps(node.id, { src: v })); else window.__wisyToast?.('Choose an image first', 'err'); };
+  out.push(cropBtn);
+  return out;
+}
+function focusPad(node) {
+  const cur = (styleGet(node, 'object-position') || '50% 50%').split(/\s+/);
+  let x = parseFloat(cur[0]) || 50, y = parseFloat(cur[1] ?? cur[0]) || 50;
+  const pad = document.createElement('div'); pad.className = 'focus-pad';
+  const dot = document.createElement('div'); dot.className = 'focus-dot'; pad.append(dot);
+  const place = () => { dot.style.left = x + '%'; dot.style.top = y + '%'; };
+  place();
+  const setFrom = (e, soft) => { const r = pad.getBoundingClientRect(); x = Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100))); y = Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100))); place(); styleSet(node, 'object-position', `${x}% ${y}%`, soft); };
+  pad.addEventListener('pointerdown', (e) => { e.preventDefault(); pad.setPointerCapture(e.pointerId); setFrom(e, true); const mv = (ev) => setFrom(ev, true); const up = () => { pad.removeEventListener('pointermove', mv); pad.removeEventListener('pointerup', up); styleSet(node, 'object-position', `${x}% ${y}%`); }; pad.addEventListener('pointermove', mv); pad.addEventListener('pointerup', up); });
+  return pad;
+}
+
+function parseTransform(str) { const o = { rotate: 0, sx: 1, sy: 1, scale: 1 }; if (!str) return o; let m; if ((m = str.match(/rotate\((-?[\d.]+)deg\)/))) o.rotate = +m[1]; if ((m = str.match(/scaleX\((-?[\d.]+)\)/))) o.sx = +m[1]; if ((m = str.match(/scaleY\((-?[\d.]+)\)/))) o.sy = +m[1]; if ((m = str.match(/(?:^|\s)scale\((-?[\d.]+)\)/))) o.scale = +m[1]; return o; }
+function buildTransform(o) { const p = []; if (o.scale !== 1) p.push(`scale(${o.scale})`); if (o.sx !== 1) p.push(`scaleX(${o.sx})`); if (o.sy !== 1) p.push(`scaleY(${o.sy})`); if (o.rotate) p.push(`rotate(${o.rotate}deg)`); return p.join(' '); }
+function transformControl(node) {
+  const get = () => parseTransform(styleGet(node, 'transform'));
+  const set = (o, soft) => styleSet(node, 'transform', buildTransform(o) || null, soft);
+  const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+  // rotate
+  const rRow = document.createElement('div'); rRow.className = 'range-ctl';
+  const r = document.createElement('input'); r.type = 'range'; r.min = -180; r.max = 180; r.step = 1; r.value = get().rotate;
+  const rn = document.createElement('input'); rn.className = 'ctl range-num'; rn.type = 'number'; rn.value = get().rotate;
+  r.addEventListener('input', () => { rn.value = r.value; const o = get(); o.rotate = +r.value; set(o, true); });
+  r.addEventListener('change', () => { const o = get(); o.rotate = +r.value; set(o); });
+  rn.addEventListener('change', () => { r.value = rn.value; const o = get(); o.rotate = +rn.value; set(o); });
+  rRow.append(r, rn);
+  // scale
+  const sRow = document.createElement('div'); sRow.className = 'range-ctl';
+  const s = document.createElement('input'); s.type = 'range'; s.min = 0.3; s.max = 2.5; s.step = 0.05; s.value = get().scale;
+  const sn = document.createElement('input'); sn.className = 'ctl range-num'; sn.type = 'number'; sn.value = get().scale;
+  s.addEventListener('input', () => { sn.value = s.value; const o = get(); o.scale = +s.value; set(o, true); });
+  s.addEventListener('change', () => { const o = get(); o.scale = +s.value; set(o); });
+  sn.addEventListener('change', () => { s.value = sn.value; const o = get(); o.scale = +sn.value; set(o); });
+  sRow.append(s, sn);
+  // flips
+  const seg = document.createElement('div'); seg.className = 'seg';
+  const fh = document.createElement('button'); fh.type = 'button'; fh.textContent = 'Flip H';
+  const fv = document.createElement('button'); fv.type = 'button'; fv.textContent = 'Flip V';
+  const sync = () => { const o = get(); fh.classList.toggle('is-active', o.sx < 0); fv.classList.toggle('is-active', o.sy < 0); };
+  fh.onclick = () => { const o = get(); o.sx = o.sx < 0 ? 1 : -1; set(o); sync(); };
+  fv.onclick = () => { const o = get(); o.sy = o.sy < 0 ? 1 : -1; set(o); sync(); };
+  sync(); seg.append(fh, fv);
+  wrap.append(labeledRow('Rotate', rRow), labeledRow('Scale', sRow), seg);
+  return field('Transform', wrap, true);
+}
+function labeledRow(lbl, ctl) { const w = document.createElement('div'); w.style.cssText = 'display:flex;align-items:center;gap:8px'; const l = document.createElement('span'); l.textContent = lbl; l.style.cssText = 'font-size:11px;color:var(--txt-3);min-width:44px'; w.append(l, ctl); ctl.style.flex = '1'; return w; }
+
 function effectControls(node) {
   return [
+    transformControl(node),
     styleField(node, 'Opacity', 'opacity', 'range', { min: 0, max: 1, step: 0.05 }),
     styleField(node, 'Overflow', 'overflow', 'select', { options: ['', 'visible', 'hidden', 'auto', 'scroll'] }),
     styleField(node, 'Position', 'position', 'select', { options: ['', 'relative', 'absolute', 'sticky', 'fixed'] }),
