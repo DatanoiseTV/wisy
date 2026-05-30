@@ -5,12 +5,12 @@
    ============================================================ */
 import { store } from './state.js';
 import { THEME_PRESETS, TOKEN_SCHEMA, DEFAULT_TOKENS, FONT_OPTIONS } from './themes.js';
-import { generatePalette, randomScheme, hexToHsl, contrastRatio, grade, HARMONIES } from './color.js';
+import { generateFromSeed, hexToOklch, oklchHex, contrastRatio, grade, HARMONIES } from './color.js';
 
 let pop, btn, open = false;
 let updaters = [];     // in-place field refreshers
 let presetEls = [];    // preset card elements for highlight
-let gen = { hue: 220, sat: 70, harmony: 'complementary', mode: 'light', contrast: 1, tint: 0.5 };
+let gen = { seed: '#5b8cff', vibrancy: 1, harmony: 'complementary', mode: 'light', contrast: 1 };
 let genUpdaters = [];
 
 export function initThemeEditor() {
@@ -48,14 +48,14 @@ function applyPreset(p) {
 
 function initGenFromTokens() {
   const prim = curTok('color-primary');
-  try { const [h, s] = hexToHsl(prim); gen.hue = h; gen.sat = s; } catch { /* */ }
+  if (/^#[0-9a-f]{6}$/i.test(prim)) gen.seed = prim;
   const bg = curTok('color-bg');
-  try { const [, , l] = hexToHsl(bg); gen.mode = l < 45 ? 'dark' : 'light'; } catch { /* */ }
+  try { const [L] = hexToOklch(bg); gen.mode = L < 0.5 ? 'dark' : 'light'; } catch { /* */ }
 }
 
 function applyGen(commit) {
   // generator changes ONLY color-* tokens; the active preset's typography/shape stay intact
-  const tokens = generatePalette(gen);
+  const tokens = generateFromSeed(gen);
   store.doc.themeTokens = { ...store.doc.themeTokens, ...tokens };
   store.emit('theme:change');   // canvas updates CSS vars (smooth morph)
   store.emit('persist');
@@ -118,10 +118,23 @@ function buildGenerator(body) {
   modeRow.append(harmony);
   grid.append(modeRow);
 
-  grid.append(genSlider('Hue', 'hue', 0, 360, 1, true));
-  grid.append(genSlider('Saturation', 'sat', 0, 100, 1));
-  grid.append(genSlider('Contrast', 'contrast', 0.8, 1.35, 0.01));
-  grid.append(genSlider('Neutral tint', 'tint', 0, 1, 0.02));
+  // seed (brand) color — the designer-standard starting point
+  const seedRow = document.createElement('div'); seedRow.className = 'gen__field'; seedRow.style.gridColumn = '1/-1';
+  seedRow.innerHTML = '<div class="gen__flabel"><span>Brand color (seed)</span></div>';
+  const sc = document.createElement('div'); sc.className = 'color-ctl';
+  const sw = document.createElement('div'); sw.className = 'color-swatch';
+  const fill = document.createElement('div'); fill.className = 'color-swatch__fill'; fill.style.background = gen.seed;
+  const picker = document.createElement('input'); picker.type = 'color'; picker.value = /^#[0-9a-f]{6}$/i.test(gen.seed) ? gen.seed : '#5b8cff';
+  const txt = document.createElement('input'); txt.className = 'ctl'; txt.value = gen.seed;
+  picker.addEventListener('input', () => { gen.seed = picker.value; txt.value = picker.value; fill.style.background = picker.value; applyGen(false); });
+  picker.addEventListener('change', () => applyGen(true));
+  txt.addEventListener('input', () => { gen.seed = txt.value; fill.style.background = txt.value; if (/^#[0-9a-f]{6}$/i.test(txt.value)) picker.value = txt.value; applyGen(true); });
+  sw.append(fill, picker); sc.append(sw, txt); seedRow.append(sc);
+  genUpdaters.push(() => { fill.style.background = gen.seed; txt.value = gen.seed; if (/^#[0-9a-f]{6}$/i.test(gen.seed)) picker.value = gen.seed; });
+  grid.append(seedRow);
+
+  grid.append(genSlider('Vibrancy', 'vibrancy', 0, 1.6, 0.02));
+  grid.append(genSlider('Contrast', 'contrast', 0.8, 1.3, 0.01));
 
   // contrast badge
   const badge = document.createElement('div'); badge.className = 'gen__badge';
@@ -135,7 +148,14 @@ function buildGenerator(body) {
   grid.append(badge);
 
   wrap.append(grid);
-  wrap.querySelector('.gen__shuffle').onclick = () => { gen = randomScheme(gen); applyGen(true); rebuildGen(); };
+  wrap.querySelector('.gen__shuffle').onclick = () => {
+    const hue = Math.floor(Math.random() * 360);
+    const harmonies = Object.keys(HARMONIES);
+    gen.seed = oklchHex(gen.mode === 'dark' ? 0.68 : 0.6, 0.13 + Math.random() * 0.1, hue);
+    gen.harmony = harmonies[Math.floor(Math.random() * harmonies.length)];
+    gen.vibrancy = 0.85 + Math.random() * 0.5;
+    applyGen(true); rebuildGen();
+  };
   body.append(wrap);
   requestAnimationFrame(refreshBadge);
 }

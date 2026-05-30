@@ -57,6 +57,51 @@ export function bestOn(bg, candidates = ['#ffffff', '#0b0d10']) {
   return candidates.map((c) => [c, contrastRatio(bg, c)]).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+/* ============================================================
+   OKLCH — perceptually uniform color space (the modern, correct
+   way to build palettes: equal lightness *looks* equal across
+   hues, unlike HSL). Used for the seed‑color generator.
+   ============================================================ */
+function srgbToLin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function linToSrgb(c) { return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; }
+export function rgbToOklch(r, g, b) {
+  const lr = srgbToLin(r), lg = srgbToLin(g), lb = srgbToLin(b);
+  const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+  const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+  const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
+  const l_ = Math.cbrt(l), m_ = Math.cbrt(m), s_ = Math.cbrt(s);
+  const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
+  const A = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+  const B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+  let C = Math.hypot(A, B), H = Math.atan2(B, A) * 180 / Math.PI; if (H < 0) H += 360;
+  return [L, C, H];
+}
+export function hexToOklch(hex) { return rgbToOklch(...hexToRgb(hex)); }
+function oklchToRgbRaw(L, C, H) {
+  const h = H * Math.PI / 180, a = C * Math.cos(h), b = C * Math.sin(h);
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+  const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  ];
+}
+function inGamut(rgb) { return rgb.every((c) => c >= -0.001 && c <= 1.001); }
+/* clamp into sRGB by reducing chroma until the color fits (keeps hue + lightness) */
+export function oklchHex(L, C, H) {
+  L = clamp(L, 0, 1);
+  let lo = 0, hi = C, lin = oklchToRgbRaw(L, C, H);
+  if (!inGamut(lin)) {
+    for (let i = 0; i < 18; i++) { const mid = (lo + hi) / 2; if (inGamut(oklchToRgbRaw(L, mid, H))) lo = mid; else hi = mid; }
+    lin = oklchToRgbRaw(L, lo, H);
+  }
+  const [r, g, b] = lin.map((c) => Math.round(clamp(linToSrgb(clamp(c, 0, 1)), 0, 1) * 255));
+  return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
 /* ---- harmony offsets ---- */
 export const HARMONIES = {
   monochrome: [0],
@@ -119,6 +164,54 @@ export function generatePalette(opts) {
   }
   // pick readable text color that sits on the primary (for buttons)
   t['color-primary-contrast'] = bestOn(t['color-primary'], ['#ffffff', t['color-strong']]);
+  return t;
+}
+
+/* ---- seed‑color generator (OKLCH, perceptually uniform) ----
+   opts: { seed (hex brand color), vibrancy (0..1.6 chroma scale), harmony,
+   mode:'light'|'dark', contrast (0.8..1.3) } */
+export function generateFromSeed(opts) {
+  const [, c0, h0] = hexToOklch(opts.seed || '#5b8cff');
+  const H = ((h0 % 360) + 360) % 360;
+  const vib = clamp(opts.vibrancy ?? 1, 0, 1.6);
+  const baseC = clamp(c0 * vib, 0.02, 0.32);
+  const aH = accentHue(H, opts.harmony || 'complementary');
+  const dark = opts.mode === 'dark';
+  const ct = clamp(opts.contrast ?? 1, 0.8, 1.3);
+  const nC = Math.min(baseC * 0.16, dark ? 0.02 : 0.014); // neutral chroma (hint of hue)
+  let t;
+  if (dark) {
+    t = {
+      'color-bg': oklchHex(0.18, nC, H),
+      'color-surface': oklchHex(0.225, nC, H),
+      'color-surface-2': oklchHex(0.27, nC * 0.9, H),
+      'color-border': oklchHex(0.32, nC * 0.8, H),
+      'color-text': oklchHex(clamp(0.80 * ct, 0.6, 0.9), nC * 1.4, H),
+      'color-muted': oklchHex(0.64, nC * 1.2, H),
+      'color-strong': oklchHex(clamp(0.96 * ct, 0.85, 0.99), nC, H),
+      'color-primary': oklchHex(0.70, Math.max(baseC, 0.12), H),
+      'color-accent': oklchHex(0.72, Math.max(baseC, 0.12), aH),
+      'color-success': oklchHex(0.74, 0.15, 150),
+      'color-warning': oklchHex(0.80, 0.15, 80),
+      'color-danger': oklchHex(0.68, 0.18, 25),
+    };
+  } else {
+    t = {
+      'color-bg': oklchHex(0.992, nC * 0.5, H),
+      'color-surface': oklchHex(0.972, nC * 0.7, H),
+      'color-surface-2': oklchHex(0.94, nC * 0.9, H),
+      'color-border': oklchHex(0.90, nC, H),
+      'color-text': oklchHex(clamp(0.40 - (ct - 1) * 0.5, 0.28, 0.46), nC * 1.6, H),
+      'color-muted': oklchHex(0.56, nC * 1.3, H),
+      'color-strong': oklchHex(clamp(0.28 - (ct - 1) * 0.4, 0.18, 0.34), nC * 1.2, H),
+      'color-primary': oklchHex(clamp(0.62 - (ct - 1) * 0.25, 0.45, 0.7), Math.max(baseC, 0.13), H),
+      'color-accent': oklchHex(0.60, Math.max(baseC, 0.13), aH),
+      'color-success': oklchHex(0.58, 0.15, 150),
+      'color-warning': oklchHex(0.70, 0.16, 75),
+      'color-danger': oklchHex(0.56, 0.19, 27),
+    };
+  }
+  t['color-primary-contrast'] = bestOn(t['color-primary'], ['#ffffff', '#0b0d10']);
   return t;
 }
 
