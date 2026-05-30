@@ -80,6 +80,14 @@ export const ICONS = {
   tour: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>',
   chart: '<path d="M4 19V5M4 19h16M8 16V9M13 16V6M18 16v-4"/>',
   embed2: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+  avatar: '<circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/>',
+  breadcrumb: '<path d="M4 12h4M11 12h4M18 12h2"/><path d="M9 9l3 3-3 3M16 9l3 3-3 3"/>',
+  steps: '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/>',
+  timeline: '<path d="M6 3v18"/><circle cx="6" cy="7" r="2"/><circle cx="6" cy="15" r="2"/><path d="M10 7h10M10 15h8"/>',
+  logos: '<rect x="3" y="8" width="4" height="4" rx="1"/><rect x="10" y="8" width="4" height="4" rx="1"/><rect x="17" y="8" width="4" height="4" rx="1"/>',
+  progress: '<rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor"/>',
+  accordion: '<rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="11" width="18" height="5" rx="1"/><path d="M17 6.5h1M17 13.5h1"/>',
 };
 export const icoSvg = (name) => `<svg viewBox="0 0 24 24" class="ic">${ICONS[name] || ICONS.container}</svg>`;
 
@@ -295,6 +303,120 @@ def('gallery', {
   defaultProps: { images: '', cols: 3, gap: 10, radius: '8px' },
   defaultStyle: { width: '100%' },
   render: (n) => buildWidget('wisy-gallery', n.props),
+});
+
+/* === GENERAL UI === */
+def('alert', {
+  label: 'Alert', group: 'UI', icon: 'alert',
+  props: [
+    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'text', label: 'Message', type: 'textarea' },
+    { key: 'variant', label: 'Type', type: 'select', options: ['info', 'success', 'warning', 'danger'] },
+  ],
+  defaultProps: { title: 'Heads up', text: 'This is an informational message worth noticing.', variant: 'info' },
+  render: (n) => h('div', { class: `wc-alert wc-alert--${n.props.variant || 'info'}` },
+    h('span', { class: 'wc-alert__dot' }),
+    h('div', { class: 'wc-alert__body' }, n.props.title ? edit(h('strong', null, n.props.title), 'title') : null, n.props.text ? edit(h('p', null, n.props.text), 'text') : null)),
+});
+def('avatar', {
+  label: 'Avatar', group: 'UI', icon: 'avatar',
+  props: [
+    { key: 'src', label: 'Image', type: 'asset' },
+    { key: 'size', label: 'Size', type: 'range', min: 24, max: 160, step: 4 },
+    { key: 'shape', label: 'Shape', type: 'select', options: ['circle', 'rounded', 'square'] },
+    { key: 'ring', label: 'Ring', type: 'bool' },
+    { key: 'status', label: 'Status', type: 'select', options: ['', 'online', 'busy', 'away'] },
+  ],
+  defaultProps: { src: '', size: 56, shape: 'circle', ring: false, status: '' },
+  render: (n) => {
+    const s = n.props.size || 56;
+    const wrap = h('span', { class: `wc-avatar wc-avatar--${n.props.shape || 'circle'}${n.props.ring ? ' is-ring' : ''}`, style: { width: s + 'px', height: s + 'px' } },
+      h('img', { src: n.props.src || avatarPlaceholder(), alt: '', loading: 'lazy' }));
+    if (n.props.status) wrap.append(h('span', { class: `wc-avatar__status is-${n.props.status}` }));
+    return wrap;
+  },
+});
+def('breadcrumb', {
+  label: 'Breadcrumb', group: 'UI', icon: 'breadcrumb',
+  props: [{ key: 'items', label: 'Items', type: 'list', columns: [{ label: 'Label' }], addLabel: 'Add crumb' }],
+  defaultProps: { items: 'Home\nProducts\nDetail' },
+  defaultStyle: { display: 'flex', 'align-items': 'center', gap: '8px', color: 'var(--color-muted)', 'font-size': '.9rem' },
+  render: (n) => {
+    const nav = h('nav', { class: 'wc-breadcrumb', 'aria-label': 'Breadcrumb' });
+    const items = (n.props.items || '').split('\n').map((s) => s.trim()).filter(Boolean);
+    items.forEach((it, i) => { nav.append(h('a', { href: '#', 'aria-current': i === items.length - 1 ? 'page' : null }, it)); if (i < items.length - 1) nav.append(h('span', { class: 'wc-breadcrumb__sep' }, '/')); });
+    return nav;
+  },
+});
+def('progress', {
+  label: 'Progress', group: 'UI', icon: 'progress',
+  props: [
+    { key: 'label', label: 'Label', type: 'text' },
+    { key: 'value', label: 'Percent', type: 'range', min: 0, max: 100, step: 1 },
+    { key: 'showval', label: 'Show %', type: 'bool' },
+  ],
+  defaultProps: { label: 'Progress', value: 68, showval: true },
+  render: (n) => h('div', { class: 'wc-progress' },
+    (n.props.label || n.props.showval) ? h('div', { class: 'wc-progress__top' }, n.props.label ? h('span', null, n.props.label) : h('span'), n.props.showval ? h('span', null, (n.props.value || 0) + '%') : null) : null,
+    h('div', { class: 'wc-progress__track' }, h('div', { class: 'wc-progress__fill', style: { width: (n.props.value || 0) + '%' } }))),
+});
+def('steps', {
+  label: 'Steps', group: 'UI', icon: 'steps',
+  props: [{ key: 'items', label: 'Steps', type: 'list', columns: [{ label: 'Step' }], addLabel: 'Add step' }, { key: 'active', label: 'Active #', type: 'range', min: 1, max: 8, step: 1 }],
+  defaultProps: { items: 'Account\nProfile\nPlan\nDone', active: 2 },
+  render: (n) => {
+    const wrap = h('div', { class: 'wc-steps' });
+    (n.props.items || '').split('\n').map((s) => s.trim()).filter(Boolean).forEach((it, i) => {
+      const st = i + 1 < n.props.active ? 'done' : (i + 1 == n.props.active ? 'active' : '');
+      wrap.append(h('div', { class: 'wc-step is-' + st }, h('span', { class: 'wc-step__num' }, i + 1 < n.props.active ? '✓' : String(i + 1)), h('span', { class: 'wc-step__lbl' }, it)));
+    });
+    return wrap;
+  },
+});
+def('timeline', {
+  label: 'Timeline', group: 'UI', icon: 'timeline',
+  props: [{ key: 'items', label: 'Events', type: 'list', columns: [{ label: 'Date', w: '74px' }, { label: 'Title' }, { label: 'Detail' }], addLabel: 'Add event' }],
+  defaultProps: { items: '2021|Founded|Started in a garage.\n2023|Series A|Raised $4M.\n2025|Global|Launched worldwide.' },
+  render: (n) => {
+    const wrap = h('div', { class: 'wc-timeline' });
+    (n.props.items || '').split('\n').filter((l) => l.trim()).forEach((line) => {
+      const [d, t, det] = line.split('|');
+      wrap.append(h('div', { class: 'wc-tl__item' }, h('div', { class: 'wc-tl__dot' }),
+        h('div', { class: 'wc-tl__body' }, h('span', { class: 'wc-tl__date' }, (d || '').trim()), h('strong', null, (t || '').trim()), det ? h('p', null, det.trim()) : null)));
+    });
+    return wrap;
+  },
+});
+def('logos', {
+  label: 'Logo strip', group: 'UI', icon: 'logos',
+  props: [
+    { key: 'items', label: 'Logos', type: 'list', columns: [{ label: 'Name' }], addLabel: 'Add logo' },
+    { key: 'marquee', label: 'Scroll', type: 'bool' },
+  ],
+  defaultProps: { items: 'Northwind\nAcme\nLumen\nVerde\nOrbit\nCadence', marquee: false },
+  render: (n) => {
+    const track = h('div', { class: 'wc-logos__track' });
+    const items = (n.props.items || '').split('\n').map((s) => s.trim()).filter(Boolean);
+    const set = () => items.forEach((it) => track.append(h('span', { class: 'wc-logo' }, it)));
+    set(); if (n.props.marquee) set();
+    return h('div', { class: 'wc-logos' + (n.props.marquee ? ' is-marquee' : '') }, track);
+  },
+});
+def('accordion', {
+  label: 'Accordion / FAQ', group: 'UI', icon: 'accordion',
+  props: [{ key: 'items', label: 'Items', type: 'list', columns: [{ label: 'Question' }, { label: 'Answer' }], addLabel: 'Add item' }, { key: 'open', label: 'First open', type: 'bool' }],
+  defaultProps: { items: 'What is Wisy?|A parametric visual design studio.\nDo I own the code?|Yes — clean HTML/CSS/JS, no lock-in.\nIs there a build step?|None. Open index.html.', open: true },
+  render: (n) => {
+    const wrap = h('div', { class: 'wc-accordion' });
+    (n.props.items || '').split('\n').filter((l) => l.trim()).forEach((line, i) => {
+      const [q, a] = line.split('|');
+      const det = h('details', { class: 'wc-acc__item' });
+      if (i === 0 && n.props.open) det.setAttribute('open', '');
+      det.append(h('summary', { class: 'wc-acc__q' }, (q || '').trim()), h('div', { class: 'wc-acc__a' }, h('p', null, (a || '').trim())));
+      wrap.append(det);
+    });
+    return wrap;
+  },
 });
 
 /* === DATA / CHARTS === */
@@ -765,7 +887,10 @@ function placeholderImg() {
 }
 
 /* category order for the library palette */
-export const GROUPS = ['Sections', 'Layout', 'Content', 'Media', 'Data', 'Music', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
+function avatarPlaceholder() {
+  return 'data:image/svg+xml,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' fill='#dfe4ec'/><circle cx='60' cy='48' r='22' fill='#b9c2d0'/><path d='M20 112a40 40 0 0 1 80 0z' fill='#b9c2d0'/></svg>");
+}
+export const GROUPS = ['Sections', 'Layout', 'Content', 'UI', 'Media', 'Data', 'Music', 'Forms', 'Audio / UI', 'Mobile', 'Advanced'];
 
 /* make a node with the registry defaults applied */
 export function makeComponent(type) {
