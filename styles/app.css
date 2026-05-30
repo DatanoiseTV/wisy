@@ -98,7 +98,12 @@ input, textarea, select { font-family: inherit; }
 }
 .vp-btn:hover { color: var(--txt-0); background: var(--bg-3); }
 .vp-btn.is-active { color: var(--accent); background: var(--accent-soft); }
-.zoom-readout { font-variant-numeric: tabular-nums; color: var(--txt-2); font-size: 12px; min-width: 42px; text-align: center; }
+.zoom-ctl { display: flex; align-items: center; gap: 2px; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; }
+.zoom-btn { width: 26px; height: 24px; display: grid; place-items: center; background: transparent; border: 0; border-radius: var(--r-sm); color: var(--txt-2); transition: all .12s var(--ease); }
+.zoom-btn .ic { width: 15px; height: 15px; }
+.zoom-btn:hover { background: var(--bg-3); color: var(--txt-0); }
+.zoom-readout { font-variant-numeric: tabular-nums; color: var(--txt-1); font-size: 12px; min-width: 46px; text-align: center; background: transparent; border: 0; padding: 0 4px; border-radius: var(--r-sm); }
+.zoom-readout:hover { background: var(--bg-3); color: var(--txt-0); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px;
@@ -246,13 +251,14 @@ input, textarea, select { font-family: inherit; }
     var(--bg-0);
   overflow: hidden;
 }
-.stage-scroll { position: absolute; inset: 0; overflow: auto; display: grid; place-items: start center; padding: 36px; }
-.stage-frame { position: relative; transform-origin: top center; }
+.stage-scroll { position: absolute; inset: 0; overflow: auto; padding: 40px; }
+.stage-sizer { position: relative; margin: 0 auto; }
+.stage-frame { position: absolute; top: 0; left: 0; transform-origin: top left; will-change: transform; }
 .stage {
   display: block; width: 1280px; height: 800px; border: 0; background: #fff;
-  border-radius: 8px; box-shadow: var(--sh-3); transition: width .28s var(--ease);
+  border-radius: 8px; box-shadow: var(--sh-3);
 }
-.overlay { position: absolute; inset: 0; pointer-events: none; }
+.overlay { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; overflow: visible; }
 
 /* selection chrome drawn by JS as children of overlay */
 .sel-box { position: absolute; border: 1.5px solid var(--accent); border-radius: 2px; pointer-events: none; }

@@ -41,7 +41,12 @@
             <svg viewBox="0 0 24 24" class="ic"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>
           </button>
         </div>
-        <div class="zoom-readout"><span id="zoom-val">100%</span></div>
+        <div class="zoom-ctl">
+          <button class="zoom-btn" id="zoom-out" title="Zoom out (Cmd -)" aria-label="Zoom out"><svg viewBox="0 0 24 24" class="ic"><path d="M5 12h14"/></svg></button>
+          <button class="zoom-readout" id="zoom-val" title="Reset to 100% (Cmd 0)">100%</button>
+          <button class="zoom-btn" id="zoom-in" title="Zoom in (Cmd +)" aria-label="Zoom in"><svg viewBox="0 0 24 24" class="ic"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="zoom-btn" id="zoom-fit" title="Fit (Cmd 1)" aria-label="Fit to screen"><svg viewBox="0 0 24 24" class="ic"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+        </div>
       </div>
 
       <div class="topbar__group topbar__actions">
@@ -100,8 +105,10 @@
       <!-- Canvas -->
       <section class="stage-wrap" id="stage-wrap">
         <div class="stage-scroll" id="stage-scroll">
-          <div class="stage-frame" id="stage-frame">
-            <iframe id="stage" class="stage" title="Design canvas"></iframe>
+          <div class="stage-sizer" id="stage-sizer">
+            <div class="stage-frame" id="stage-frame">
+              <iframe id="stage" class="stage" title="Design canvas"></iframe>
+            </div>
             <div class="overlay" id="overlay" aria-hidden="true"></div>
           </div>
         </div>

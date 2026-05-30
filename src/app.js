@@ -2,7 +2,7 @@
    Wisy — application bootstrap & toolbar wiring.
    ============================================================ */
 import { store } from './state.js';
-import { initCanvas, setViewport } from './canvas.js';
+import { initCanvas, setViewport, setZoom, zoomBy, fitZoom, resetZoom } from './canvas.js';
 import { initLibrary } from './library.js';
 import { initInspector } from './inspector.js';
 import { initLayers } from './layers.js';
@@ -27,6 +27,7 @@ function boot() {
   wireRailTabs();
   wireToolbar();
   wireViewport();
+  wireZoom();
   wireModal();
   wireShortcuts();
   wirePersistence();
@@ -93,6 +94,14 @@ function wireViewport() {
   }));
 }
 
+/* ---------- zoom ---------- */
+function wireZoom() {
+  document.getElementById('zoom-in').addEventListener('click', () => zoomBy(1.25));
+  document.getElementById('zoom-out').addEventListener('click', () => zoomBy(0.8));
+  document.getElementById('zoom-fit').addEventListener('click', () => fitZoom());
+  document.getElementById('zoom-val').addEventListener('click', () => resetZoom());
+}
+
 /* ---------- code modal ---------- */
 function wireModal() {
   const modal = document.getElementById('modal');
@@ -133,6 +142,10 @@ function wireShortcuts() {
     if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? store.redo() : store.undo(); return; }
     if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); store.redo(); return; }
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); persistNow(); toast('Saved locally', 'ok'); return; }
+    if (mod && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomBy(1.25); return; }
+    if (mod && e.key === '-') { e.preventDefault(); zoomBy(0.8); return; }
+    if (mod && e.key === '0') { e.preventDefault(); resetZoom(); return; }
+    if (mod && e.key === '1') { e.preventDefault(); fitZoom(); return; }
     if (typing) return;
     if (mod && e.key.toLowerCase() === 'd' && store.selectedId) { e.preventDefault(); store.duplicate(store.selectedId); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedId) { e.preventDefault(); store.remove(store.selectedId); return; }
@@ -163,3 +176,4 @@ function toast(msg, kind) {
   toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2200);
 }
 window.__wisyToast = toast;
+window.__wisy = { store }; // debug/testing handle

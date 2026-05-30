@@ -10,11 +10,13 @@ import { renderNode, BASE_CSS, EDITOR_CSS, buildDocCss } from './render.js';
 import { REG } from './registry.js';
 import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
 
-let frame, overlay, stageFrame, stageScroll, emptyEl, zoomVal;
+let frame, overlay, stageFrame, stageSizer, stageScroll, emptyEl, zoomVal;
 let fdoc, fwin, mount, sBase, sTheme, sDoc, fontLink;
 let ready = false;
 let hoverWid = null;
 let dragState = null;
+let userZoom = null;        // null → auto-fit width; number → manual
+const ZMIN = 0.1, ZMAX = 4;
 
 const widgetsCssUrl = new URL('../styles/widgets.css', import.meta.url).href;
 const widgetsJsUrl = new URL('./widgets.js', import.meta.url).href;
@@ -23,6 +25,7 @@ export function initCanvas() {
   frame = document.getElementById('stage');
   overlay = document.getElementById('overlay');
   stageFrame = document.getElementById('stage-frame');
+  stageSizer = document.getElementById('stage-sizer');
   stageScroll = document.getElementById('stage-scroll');
   emptyEl = document.getElementById('stage-empty');
   zoomVal = document.getElementById('zoom-val');
@@ -55,8 +58,15 @@ export function initCanvas() {
   store.on('theme:change', () => { applyTheme(); });
   store.on('page:change', () => { setTimeout(renderDoc, 0); });
 
-  window.addEventListener('resize', () => { autoFit(); drawSelection(); });
+  window.addEventListener('resize', () => { applyZoom(); drawSelection(); });
   stageScroll.addEventListener('scroll', () => drawSelection());
+  // ctrl/cmd + wheel to zoom (design-tool convention)
+  stageScroll.addEventListener('wheel', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    const cur = store.zoom || 1;
+    setZoom(cur * (e.deltaY < 0 ? 1.1 : 0.9));
+  }, { passive: false });
 
   // start the floating drag listeners (used by library palette)
   window.addEventListener('pointermove', onWindowDragMove);
@@ -86,29 +96,45 @@ function applyTheme() {
   if (href && fontLink.getAttribute('href') !== href) fontLink.setAttribute('href', href);
 }
 
+let contentH = 800;
 function sizeFrame() {
   if (!ready) return;
-  const h = Math.max(fdoc.documentElement.scrollHeight, fdoc.body.scrollHeight, 400);
-  frame.style.height = h + 'px';
-  overlay.style.height = h + 'px';
+  contentH = Math.max(fdoc.documentElement.scrollHeight, fdoc.body.scrollHeight, 400);
+  frame.style.height = contentH + 'px';
+  applyZoom();
 }
 
 /* ---------- viewport + zoom ---------- */
 export function setViewport(vp) {
   store.viewport = vp;
   frame.style.width = VIEWPORT_WIDTH[vp] + 'px';
-  overlay.style.width = VIEWPORT_WIDTH[vp] + 'px';
-  requestAnimationFrame(() => { autoFit(); sizeFrame(); drawSelection(); });
+  userZoom = null; // refit on viewport switch
+  requestAnimationFrame(() => { sizeFrame(); drawSelection(); });
 }
-function autoFit() {
-  const avail = stageScroll.clientWidth - 72;
-  const w = parseInt(frame.style.width || VIEWPORT_WIDTH.desktop, 10);
-  const scale = Math.min(1, avail / w);
-  store.zoom = scale;
-  stageFrame.style.transform = `scale(${scale})`;
-  stageFrame.style.width = w + 'px';
-  if (zoomVal) zoomVal.textContent = Math.round(scale * 100) + '%';
+function fitScale() {
+  const availW = stageScroll.clientWidth - 80;
+  const w = VIEWPORT_WIDTH[store.viewport] || VIEWPORT_WIDTH.desktop;
+  return Math.min(1, availW / w);
 }
+function applyZoom() {
+  const w = VIEWPORT_WIDTH[store.viewport] || VIEWPORT_WIDTH.desktop;
+  const s = clamp(userZoom == null ? fitScale() : userZoom, ZMIN, ZMAX);
+  store.zoom = s;
+  frame.style.width = w + 'px';
+  stageFrame.style.transform = `scale(${s})`;
+  stageSizer.style.width = (w * s) + 'px';
+  stageSizer.style.height = (contentH * s) + 'px';
+  overlay.style.width = (w * s) + 'px';
+  overlay.style.height = (contentH * s) + 'px';
+  if (zoomVal) zoomVal.textContent = Math.round(s * 100) + '%';
+}
+function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+
+export function setZoom(z) { userZoom = clamp(z, ZMIN, ZMAX); applyZoom(); drawSelection(); }
+export function zoomBy(f) { setZoom((store.zoom || 1) * f); }
+export function fitZoom() { userZoom = null; applyZoom(); drawSelection(); }
+export function resetZoom() { setZoom(1); }
+export function getZoom() { return store.zoom || 1; }
 
 /* ---------- frame interaction ---------- */
 function wireFrameEvents() {
@@ -136,15 +162,19 @@ function onFramePointerDown(e) {
   const wid = widOf(e.target);
   if (!wid) { store.select(null); return; }
   store.select(wid);
+  if (e.button !== 0) return;
   // begin potential reorder drag
   const startX = e.clientX, startY = e.clientY;
   const el = fdoc.querySelector(`[data-wid="${wid}"]`);
+  const pid = e.pointerId;
   let moving = false;
   const onMove = (ev) => {
     if (!moving && Math.hypot(ev.clientX - startX, ev.clientY - startY) > 5) {
       moving = true;
       dragState = { mode: 'move', wid };
-      el.style.opacity = '0.5';
+      try { el.setPointerCapture(pid); } catch { /* */ }
+      el.style.opacity = '0.45';
+      clearHover();
     }
     if (moving) {
       const target = computeDropTarget(ev.clientX, ev.clientY, wid);
@@ -152,15 +182,16 @@ function onFramePointerDown(e) {
       drawDropMarker(target);
     }
   };
-  const onUp = (ev) => {
+  const onUp = () => {
     fdoc.removeEventListener('pointermove', onMove);
     fdoc.removeEventListener('pointerup', onUp);
+    try { el.releasePointerCapture(pid); } catch { /* */ }
     if (moving) {
       el.style.opacity = '';
       clearDropMarker();
       const t = dragState?.target;
       dragState = null;
-      if (t) store.move(wid, t.parentId, t.index);
+      if (t && t.parentId) store.move(wid, t.parentId, t.index);
     }
   };
   fdoc.addEventListener('pointermove', onMove);
