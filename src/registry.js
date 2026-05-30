@@ -12,6 +12,7 @@
 import { makeNode } from './state.js';
 import { CHART_TYPES, chartDefaults } from './charts.js';
 import { parseEmbed } from './embeds.js';
+import { iconSVG } from './iconlib.js';
 
 /* tiny hyperscript over real DOM (we're always in a browser) */
 export function h(tag, attrs, ...kids) {
@@ -173,7 +174,7 @@ def('button', {
   label: 'Button', group: 'Content', icon: 'button',
   props: [
     { key: 'text', label: 'Label', type: 'text' },
-    { key: 'href', label: 'Link', type: 'text' },
+    { key: 'href', label: 'Link', type: 'link' },
     { key: 'variant', label: 'Style', type: 'select', options: ['primary', 'secondary', 'ghost', 'outline'] },
     { key: 'size', label: 'Size', type: 'select', options: ['sm', 'md', 'lg'] },
   ],
@@ -184,7 +185,7 @@ def('link', {
   label: 'Link', group: 'Content', icon: 'link',
   props: [
     { key: 'text', label: 'Text', type: 'text' },
-    { key: 'href', label: 'URL', type: 'text' },
+    { key: 'href', label: 'URL', type: 'link' },
   ],
   defaultProps: { text: 'Learn more →', href: '#' },
   defaultStyle: { color: 'var(--color-primary)', 'text-decoration': 'none', 'font-weight': '500' },
@@ -202,12 +203,16 @@ def('badge', {
 def('icon', {
   label: 'Icon', group: 'Content', icon: 'icon',
   props: [
-    { key: 'glyph', label: 'Glyph', type: 'select', options: Object.keys(ICON_GLYPHS) },
+    { key: 'icon', label: 'Icon', type: 'iconpick' },
     { key: 'size', label: 'Size', type: 'range', min: 16, max: 96, step: 2 },
+    { key: 'weight', label: 'Stroke', type: 'range', min: 1, max: 3, step: 0.25 },
   ],
-  defaultProps: { glyph: 'star', size: 28 },
+  defaultProps: { icon: 'outline:sparkles', size: 28, weight: 1.8 },
   defaultStyle: { color: 'var(--color-primary)' },
-  render: (n) => h('span', { class: 'wc-icon', style: { width: (n.props.size || 28) + 'px', height: (n.props.size || 28) + 'px' }, html: glyph(n.props.glyph) }),
+  render: (n) => {
+    const [set, name] = (n.props.icon || 'outline:star').split(':');
+    return h('span', { class: 'wc-icon', style: { width: (n.props.size || 28) + 'px', height: (n.props.size || 28) + 'px' }, html: iconSVG(set, name, { size: n.props.size || 28, stroke: n.props.weight || 1.8 }) });
+  },
 });
 def('list', {
   label: 'List', group: 'Content', icon: 'list',
@@ -228,7 +233,7 @@ def('list', {
 def('image', {
   label: 'Image', group: 'Media', icon: 'image',
   props: [
-    { key: 'src', label: 'Source URL', type: 'text' },
+    { key: 'src', label: 'Image', type: 'asset' },
     { key: 'alt', label: 'Alt text', type: 'text' },
     { key: 'fit', label: 'Fit', type: 'select', options: ['cover', 'contain', 'fill'] },
   ],
@@ -260,7 +265,7 @@ def('mediaplayer', {
 def('imageframe', {
   label: 'Image frame', group: 'Media', icon: 'frame',
   props: [
-    { key: 'src', label: 'Image URL', type: 'text' },
+    { key: 'src', label: 'Image', type: 'asset' },
     { key: 'caption', label: 'Caption', type: 'text' },
     { key: 'frame', label: 'Frame', type: 'select', options: ['shadow', 'border', 'polaroid', 'browser'] },
     { key: 'fit', label: 'Fit', type: 'select', options: ['cover', 'contain'] },

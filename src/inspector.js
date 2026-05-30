@@ -6,6 +6,8 @@
 import { store, effectiveStyle } from './state.js';
 import { REG, icoSvg } from './registry.js';
 import { FONT_OPTIONS } from './themes.js';
+import { iconSVG } from './iconlib.js';
+import { openIconPicker, openFontBrowser, openLinkPicker, openAssetPicker } from './pickers.js';
 
 let host;
 const collapsed = new Set();
@@ -125,7 +127,7 @@ function propField(node, f) {
   const get = () => node.props[f.key];
   const set = (v, soft) => store.updateProps(node.id, { [f.key]: v }, soft ? { soft: true } : {});
   const ctl = buildControl(f, get, set);
-  const stack = f.type === 'textarea' || f.type === 'list';
+  const stack = f.type === 'textarea' || f.type === 'list' || f.type === 'asset';
   return field(f.label, ctl, stack);
 }
 
@@ -142,6 +144,10 @@ function buildControl(f, get, set, opts = {}) {
     case 'seg': return segCtl(get, set, f.options, f.icons);
     case 'list': return listCtl(f, get, set);
     case 'dim': return dimCtl(get, set, f);
+    case 'iconpick': return iconPickCtl(get, set);
+    case 'fontpick': return fontPickCtl(get, set);
+    case 'link': return linkCtl(get, set);
+    case 'asset': return assetCtl(get, set);
     default: return textCtl(get, set, opts.placeholder);
   }
 }
@@ -216,6 +222,44 @@ function segCtl(get, set, options, icons) {
   return seg;
 }
 function toHex(v) { if (!v) return null; if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return v.length === 4 ? '#' + v.slice(1).split('').map((c) => c + c).join('') : v; return null; }
+
+/* picker controls (icon / font / link / asset) */
+function iconPickCtl(get, set) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'ctl pick-btn';
+  const render = () => { const v = get() || 'outline:star'; const [s, nm] = v.split(':'); b.innerHTML = `<span class="pick-ico">${iconSVG(s, nm, { size: 18, stroke: 1.8 })}</span><span class="pick-lbl">${nm || 'icon'}</span><svg viewBox="0 0 24 24" class="ic pick-caret"><path d="M6 9l6 6 6-6"/></svg>`; };
+  render();
+  b.onclick = () => openIconPicker(b, get(), (v) => { set(v); render(); });
+  return b;
+}
+function fontPickCtl(get, set) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'ctl pick-btn';
+  const render = () => { const v = get() || ''; const name = (v.match(/'([^']+)'/) || [])[1] || 'Default'; b.style.fontFamily = v || 'inherit'; b.innerHTML = `<span class="pick-lbl">${name}</span><svg viewBox="0 0 24 24" class="ic pick-caret"><path d="M6 9l6 6 6-6"/></svg>`; };
+  render();
+  b.onclick = () => openFontBrowser(b, get(), (stack) => { set(stack); render(); });
+  return b;
+}
+function linkCtl(get, set) {
+  const wrap = document.createElement('div'); wrap.className = 'pick-link';
+  const i = document.createElement('input'); i.className = 'ctl'; i.type = 'text'; i.value = get() ?? ''; i.placeholder = '# / page / url';
+  i.addEventListener('input', () => set(i.value, true));
+  i.addEventListener('change', () => set(i.value));
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'pick-link-btn'; b.title = 'Choose page or link';
+  b.innerHTML = '<svg viewBox="0 0 24 24" class="ic"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>';
+  b.onclick = () => openLinkPicker(b, get(), (v) => { i.value = v; set(v); });
+  wrap.append(i, b);
+  return wrap;
+}
+function assetCtl(get, set) {
+  const wrap = document.createElement('div'); wrap.className = 'pick-asset';
+  const thumb = document.createElement('div'); thumb.className = 'pick-thumb';
+  const setThumb = () => { const v = get(); thumb.style.backgroundImage = v ? `url("${v.replace(/"/g, '%22')}")` : ''; thumb.classList.toggle('empty', !v); };
+  setThumb();
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn pick-asset-btn'; b.textContent = 'Choose image…';
+  b.onclick = () => openAssetPicker(b, get(), (v) => { set(v); setThumb(); });
+  thumb.onclick = () => openAssetPicker(thumb, get(), (v) => { set(v); setThumb(); });
+  wrap.append(thumb, b);
+  return wrap;
+}
 
 /* dimension control — slider + scrubbable number + unit (pro-tool ergonomics) */
 function dimCtl(get, set, f) {
@@ -406,6 +450,7 @@ function miniLabeled(label, node, key) {
 }
 function typoControls(node) {
   return [
+    styleField(node, 'Font', 'font-family', 'fontpick'),
     styleField(node, 'Color', 'color', 'color', { placeholder: 'inherit' }),
     styleField(node, 'Font size', 'font-size', 'dim', { min: 8, max: 120, step: 1, units: ['px', 'rem', 'em'] }),
     styleField(node, 'Weight', 'font-weight', 'select', { options: ['', '300', '400', '500', '600', '700', '800', '900'] }),

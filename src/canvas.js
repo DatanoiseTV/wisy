@@ -8,7 +8,8 @@
 import { store, VIEWPORT_WIDTH, DEVICES, DEFAULT_DEVICE } from './state.js';
 import { renderNode, BASE_CSS, EDITOR_CSS, buildDocCss } from './render.js';
 import { REG } from './registry.js';
-import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
+import { DEFAULT_TOKENS, tokensToCss, fontsFromTokens } from './themes.js';
+import { googleFontsHref } from './fontlib.js';
 import { updateTextbar } from './textbar.js';
 
 let frame, overlay, stageFrame, stageSizer, stageScroll, emptyEl, zoomVal;
@@ -131,11 +132,24 @@ export function renderDoc() {
 }
 function countNodes(n) { return 1 + (n.children || []).reduce((s, c) => s + countNodes(c), 0); }
 
+function familyName(v) {
+  if (!v) return null;
+  const m = String(v).match(/'([^']+)'|"([^"]+)"/);
+  const fam = (m && (m[1] || m[2])) || String(v).split(',')[0].trim();
+  if (!fam || /system-ui|serif|sans-serif|monospace|ui-monospace|Georgia|Menlo|inherit/i.test(fam)) return null;
+  return fam;
+}
+function collectNodeFonts(node, set) {
+  ['base', 'tablet', 'mobile'].forEach((k) => { const ff = node.style?.[k]?.['font-family']; const f = familyName(ff); if (f) set.add(f); });
+  (node.children || []).forEach((c) => collectNodeFonts(c, set));
+}
 function applyTheme() {
   if (!ready) return;
   const tokens = { ...DEFAULT_TOKENS, ...(store.doc.themeTokens || {}) };
   sTheme.textContent = tokensToCss(store.doc.themeTokens || {});
-  const href = googleFontsHref(tokens);
+  const fams = new Set(fontsFromTokens(tokens));
+  if (store.root) collectNodeFonts(store.root, fams);
+  const href = googleFontsHref([...fams]);
   if (href && fontLink.getAttribute('href') !== href) fontLink.setAttribute('href', href);
 }
 

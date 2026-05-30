@@ -5,7 +5,8 @@
    ============================================================ */
 import { store } from './state.js';
 import { renderNode, BASE_CSS, buildDocCss } from './render.js';
-import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
+import { DEFAULT_TOKENS, tokensToCss, fontsFromTokens } from './themes.js';
+import { googleFontsHref } from './fontlib.js';
 
 const widgetsCssUrl = new URL('../styles/widgets.css', import.meta.url).href;
 const widgetsJsUrl = new URL('./widgets.js', import.meta.url).href;
@@ -87,7 +88,9 @@ export function buildStylesCss(widgetsCss) {
 
 export function buildPageHtml(page, { single = false, widgetsCss = '', widgetsJs = '', chartsJs = '' } = {}) {
   const tokens = { ...DEFAULT_TOKENS, ...(store.doc.themeTokens || {}) };
-  const fonts = googleFontsHref(tokens);
+  const fams = new Set(fontsFromTokens(tokens));
+  (function walk(n) { ['base', 'tablet', 'mobile'].forEach((k) => { const v = n.style?.[k]?.['font-family']; if (v) { const m = String(v).match(/'([^']+)'|"([^"]+)"/); const f = (m && (m[1] || m[2])); if (f && !/system-ui|serif|sans-serif|monospace/i.test(f)) fams.add(f); } }); (n.children || []).forEach(walk); })(page.root);
+  const fonts = googleFontsHref([...fams]);
   const docCss = buildDocCss(page.root);
   const title = `${page.name} — ${store.doc.title || 'Wisy Project'}`;
   const head = [
