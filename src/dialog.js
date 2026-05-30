@@ -3,6 +3,7 @@
    promise-based modals. Esc cancels, Enter confirms.
    ============================================================ */
 let layer = null;
+let _lastChecked = false;
 
 function ensureLayer() {
   if (layer) return layer;
@@ -13,7 +14,7 @@ function ensureLayer() {
   return layer;
 }
 
-function open({ title, message, icon, confirmText = 'Confirm', cancelText = 'Cancel', danger = false, input = null }) {
+function open({ title, message, icon, confirmText = 'Confirm', cancelText = 'Cancel', danger = false, input = null, checkbox = null }) {
   return new Promise((resolve) => {
     const l = ensureLayer();
     l.hidden = false;
@@ -28,6 +29,7 @@ function open({ title, message, icon, confirmText = 'Confirm', cancelText = 'Can
         </div>
       </div>
       ${input != null ? `<input class="dlg-input ctl" type="text" value="${esc(input)}" />` : ''}
+      ${checkbox ? `<label class="dlg-check"><input type="checkbox" /> ${esc(checkbox)}</label>` : ''}
       <div class="dlg-actions">
         <button class="btn btn--ghost" data-act="cancel">${esc(cancelText)}</button>
         <button class="btn ${danger ? 'btn--danger-solid' : 'btn--primary'}" data-act="ok">${esc(confirmText)}</button>
@@ -41,6 +43,7 @@ function open({ title, message, icon, confirmText = 'Confirm', cancelText = 'Can
     else card.querySelector('[data-act="ok"]').focus();
 
     const done = (val) => {
+      _lastChecked = card.querySelector('.dlg-check input')?.checked || false;
       card.classList.remove('in');
       setTimeout(() => { l.hidden = true; l.innerHTML = ''; }, 140);
       document.removeEventListener('keydown', onKey, true);
@@ -64,6 +67,15 @@ export function confirmDialog(title, opts = {}) {
 }
 export function promptDialog(title, value = '', opts = {}) {
   return open({ title, input: value, confirmText: opts.confirmText || 'Save', ...opts });
+}
+
+/* confirm that can be permanently dismissed ("Don't show again"), keyed in localStorage */
+export async function confirmOnce(key, title, opts = {}) {
+  const skipKey = 'wisy.skip.' + key;
+  try { if (localStorage.getItem(skipKey) === '1') return true; } catch { /* */ }
+  const ok = await open({ title, icon: opts.icon || WARN_IC, checkbox: opts.checkbox || "Don't show this again", ...opts });
+  if (ok && _lastChecked) { try { localStorage.setItem(skipKey, '1'); } catch { /* */ } }
+  return ok;
 }
 
 function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }

@@ -10,6 +10,8 @@ import { initPages, newPage } from './pages.js';
 import { initTemplatesPanel, applyTemplate, TEMPLATES } from './templates.js';
 import { initThemeEditor } from './theme-editor.js';
 import { getCodeBundle, previewActivePage, exportProject, highlight } from './export.js';
+import { initTextbar } from './textbar.js';
+import { confirmOnce } from './dialog.js';
 
 const STORAGE_KEY = 'wisy.project.v1';
 
@@ -24,6 +26,7 @@ function boot() {
   initPages();
   initTemplatesPanel();
   initThemeEditor();
+  initTextbar();
   wireRailTabs();
   wireToolbar();
   wireViewport();
@@ -148,10 +151,24 @@ function wireShortcuts() {
     if (mod && e.key === '1') { e.preventDefault(); fitZoom(); return; }
     if (typing) return;
     if (mod && e.key.toLowerCase() === 'd' && store.selectedId) { e.preventDefault(); store.duplicate(store.selectedId); return; }
-    if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedId) { e.preventDefault(); store.remove(store.selectedId); return; }
+    // OS-native delete: Delete (Win/Linux), Backspace + Cmd/Ctrl+Backspace (macOS)
+    if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedId) { e.preventDefault(); requestDelete(store.selectedId); return; }
     if (e.key === 'Escape') { store.select(null); }
   });
 }
+
+/* ---------- delete with first-time warning ---------- */
+async function requestDelete(id) {
+  const node = store.findNode(id)?.node;
+  if (!node) return;
+  const label = node.name || node.type;
+  const ok = await confirmOnce('delete-element', 'Delete element?', {
+    message: `Delete “${label}”? You can undo this with ${navigator.platform.includes('Mac') ? '⌘Z' : 'Ctrl+Z'}.`,
+    confirmText: 'Delete', danger: true,
+  });
+  if (ok) store.remove(id);
+}
+store.on('request-delete', requestDelete);
 
 /* ---------- persistence ---------- */
 let saveTimer = null;

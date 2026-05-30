@@ -3,7 +3,8 @@
    drag-to-reorder/reparent, delete.
    ============================================================ */
 import { store } from './state.js';
-import { REG, icoSvg } from './registry.js';
+import { REG, icoSvg, GROUPS } from './registry.js';
+import { appendComponent } from './library.js';
 
 let host;
 const collapsed = new Set();
@@ -19,7 +20,9 @@ export function initLayers() {
 
 function render() {
   if (!host.classList.contains('is-active') && host.dataset.built) { host.dataset.dirty = '1'; }
-  host.innerHTML = `<div class="panel-head"><h2>Layers</h2><span class="mini">${store.page?.name || ''}</span></div>`;
+  host.innerHTML = `<div class="panel-head"><h2>Layers</h2>
+    <button class="btn btn--ghost layers-add" id="layers-add" title="Add component" style="height:26px;padding:0 8px"><svg viewBox="0 0 24 24" class="ic" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg></button></div>`;
+  host.querySelector('#layers-add').onclick = (e) => { e.stopPropagation(); openAddMenu(e.currentTarget); };
   const tree = document.createElement('div'); tree.className = 'tree';
   if (store.root) tree.append(...(store.root.children || []).map((c) => nodeRow(c, 0)));
   if (!store.root?.children?.length) tree.innerHTML = `<div class="insp-empty" style="padding:24px 16px;font-size:12px">Empty page — add components from Insert.</div>`;
@@ -91,3 +94,45 @@ function clearMarks() { host.querySelectorAll('.drop-before,.drop-after,.drop-in
 function highlight() {
   host.querySelectorAll('.tree-row').forEach((r) => r.classList.toggle('is-selected', r.dataset.id === store.selectedId));
 }
+
+/* ---- quick add menu ---- */
+let addMenu = null;
+function openAddMenu(anchor) {
+  if (addMenu) { closeAddMenu(); return; }
+  addMenu = document.createElement('div');
+  addMenu.className = 'add-menu';
+  const search = document.createElement('div'); search.className = 'add-menu__search';
+  search.innerHTML = `<svg viewBox="0 0 24 24" class="ic"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input type="text" placeholder="Add component…" />`;
+  const listWrap = document.createElement('div'); listWrap.className = 'add-menu__list';
+  addMenu.append(search, listWrap);
+  document.body.append(addMenu);
+  const r = anchor.getBoundingClientRect();
+  addMenu.style.top = (r.bottom + 6) + 'px';
+  addMenu.style.left = Math.min(r.left, window.innerWidth - 260) + 'px';
+
+  const byGroup = {};
+  for (const t in REG) (byGroup[REG[t].group] ||= []).push(REG[t]);
+  const paint = (q = '') => {
+    q = q.trim().toLowerCase();
+    listWrap.innerHTML = '';
+    GROUPS.forEach((g) => {
+      const items = (byGroup[g] || []).filter((d) => !q || d.label.toLowerCase().includes(q));
+      if (!items.length) return;
+      const gl = document.createElement('div'); gl.className = 'add-menu__group'; gl.textContent = g; listWrap.append(gl);
+      items.forEach((d) => {
+        const it = document.createElement('button'); it.className = 'add-menu__item';
+        it.innerHTML = `<span class="add-menu__ic">${icoSvg(d.icon)}</span>${d.label}`;
+        it.onclick = () => { appendComponent(d.type); closeAddMenu(); };
+        listWrap.append(it);
+      });
+    });
+  };
+  paint();
+  const input = search.querySelector('input');
+  input.addEventListener('input', () => paint(input.value));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const first = listWrap.querySelector('.add-menu__item'); first?.click(); } if (e.key === 'Escape') closeAddMenu(); });
+  setTimeout(() => input.focus(), 0);
+  addMenu.addEventListener('click', (e) => e.stopPropagation());
+  setTimeout(() => document.addEventListener('click', closeAddMenu, { once: true }), 0);
+}
+function closeAddMenu() { addMenu?.remove(); addMenu = null; }

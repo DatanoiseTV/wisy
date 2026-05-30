@@ -153,15 +153,17 @@ def('heading', {
     { key: 'level', label: 'Level', type: 'select', options: ['1', '2', '3', '4', '5', '6'] },
   ],
   defaultProps: { text: 'A headline that earns attention', level: '2' },
+  rich: true,
   defaultStyle: { margin: '0', color: 'var(--color-strong)', 'font-family': 'var(--font-display)', 'font-weight': 'var(--weight-heading)', 'line-height': 'var(--leading-tight)', 'letter-spacing': 'var(--tracking-tight)', 'font-size': 'var(--fs-2xl)' },
-  render: (n) => edit(h('h' + (n.props.level || '2'), { class: 'wc-heading' }, n.props.text || ''), 'text'),
+  render: (n) => edit(h('h' + (n.props.level || '2'), { class: 'wc-heading', html: n.props.text || '' }), 'text'),
 });
 def('text', {
   label: 'Text', group: 'Content', icon: 'text',
   props: [{ key: 'text', label: 'Text', type: 'textarea' }],
   defaultProps: { text: 'Write something meaningful here. Good copy is specific, concrete, and respects the reader’s time.' },
+  rich: true,
   defaultStyle: { margin: '0', color: 'var(--color-text)', 'line-height': 'var(--leading)', 'font-size': 'var(--fs-md)', 'max-width': '64ch' },
-  render: (n) => edit(h('p', { class: 'wc-text' }, n.props.text || ''), 'text'),
+  render: (n) => edit(h('p', { class: 'wc-text', html: n.props.text || '' }), 'text'),
 });
 def('button', {
   label: 'Button', group: 'Content', icon: 'button',

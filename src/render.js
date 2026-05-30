@@ -271,6 +271,24 @@ textarea.wc-input{resize:vertical;line-height:1.5}
 .wc-tour__place{flex:1;display:flex;flex-direction:column}
 .wc-tour__place strong{color:var(--color-strong)}.wc-tour__place span{color:var(--color-muted);font-size:.88rem}
 
+/* ---- responsive: collapse multi-column layouts (overrides inline grid cols) ---- */
+@media (max-width:900px){
+  .wc-grid,.wc-feature__grid,.wc-pricing__row,.wg-root{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .wc-hero__title{font-size:clamp(2rem,7vw,3rem)}
+  .wc-release{flex-direction:column;text-align:center}.wc-release__info{align-items:center}.wc-release__links{justify-content:center}
+}
+@media (max-width:560px){
+  .wc-grid,.wc-feature__grid,.wc-pricing__row,.wc-stat__row,.wc-contact__grid,.wg-root{grid-template-columns:1fr !important}
+  .wc-navlinks{display:none}
+  .wc-navbar__inner{justify-content:space-between}
+  .wc-hero{padding:64px 20px}
+  .wc-section,.wc-feature,.wc-stat,.wc-cta,.wc-pricing{padding-left:18px;padding-right:18px}
+  .wc-cta__inner{padding:36px 22px}
+  .wc-pricing__card.is-featured{transform:none}
+  .wc-tour__row{flex-wrap:wrap;gap:8px}
+  .wc-footer__top{gap:28px}
+}
+
 /* ---- animations ---- */
 @keyframes wcFade{from{opacity:0}to{opacity:1}}
 @keyframes wcFadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}

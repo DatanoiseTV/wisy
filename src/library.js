@@ -78,7 +78,7 @@ export function initLibrary() {
 }
 
 /* click-to-add: into selected container, else page root */
-function appendComponent(type) {
+export function appendComponent(type) {
   const node = makeComponent(type);
   const sel = store.selected;
   let parentId = store.root.id, index = -1;

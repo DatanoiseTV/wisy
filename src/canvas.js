@@ -9,12 +9,37 @@ import { store, VIEWPORT_WIDTH } from './state.js';
 import { renderNode, BASE_CSS, EDITOR_CSS, buildDocCss } from './render.js';
 import { REG } from './registry.js';
 import { DEFAULT_TOKENS, tokensToCss, googleFontsHref } from './themes.js';
+import { updateTextbar } from './textbar.js';
 
 let frame, overlay, stageFrame, stageSizer, stageScroll, emptyEl, zoomVal;
 let fdoc, fwin, mount, sBase, sTheme, sDoc, fontLink;
 let ready = false;
 let hoverWid = null;
 let dragState = null;
+let editingEl = null;
+export function isEditing() { return !!editingEl; }
+function cleanHtml(html) {
+  const allowed = { B: 'strong', STRONG: 'strong', I: 'em', EM: 'em', U: 'u', A: 'a', BR: 'br' };
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  const walk = (node) => {
+    const out = document.createDocumentFragment();
+    node.childNodes.forEach((ch) => {
+      if (ch.nodeType === 3) out.append(document.createTextNode(ch.textContent));
+      else if (ch.nodeType === 1) {
+        const tag = allowed[ch.tagName];
+        if (tag === 'br') out.append(document.createElement('br'));
+        else if (tag) {
+          const el = document.createElement(tag);
+          if (tag === 'a' && ch.getAttribute('href')) el.setAttribute('href', ch.getAttribute('href'));
+          el.append(walk(ch)); out.append(el);
+        } else out.append(walk(ch));
+      }
+    });
+    return out;
+  };
+  const box = document.createElement('div'); box.append(walk(tmp));
+  return box.innerHTML.replace(/ /g, ' ').trim();
+}
 let userZoom = null;        // null → auto-fit width; number → manual
 const ZMIN = 0.1, ZMAX = 4;
 let animCleanup = null;
@@ -224,8 +249,10 @@ function onFrameDblClick(e) {
 }
 
 function startInlineEdit(el, wid, key) {
+  const rich = !!REG[store.findNode(wid)?.node?.type]?.rich;
   el.setAttribute('contenteditable', 'true');
   el.focus();
+  editingEl = el;
   // select all
   const r = fdoc.createRange(); r.selectNodeContents(el);
   const sel = fwin.getSelection(); sel.removeAllRanges(); sel.addRange(r);
@@ -233,7 +260,8 @@ function startInlineEdit(el, wid, key) {
     el.removeAttribute('contenteditable');
     el.removeEventListener('blur', finish);
     el.removeEventListener('keydown', onKey);
-    const val = el.innerText.replace(/ /g, ' ').trim();
+    editingEl = null;
+    const val = rich ? cleanHtml(el.innerHTML) : el.innerText.trim();
     store.updateProps(wid, { [key]: val });
   };
   const onKey = (ev) => {
@@ -313,9 +341,9 @@ export function drawSelection() {
   if (!ready) return;
   clearSelection();
   const id = store.selectedId;
-  if (!id) { drawHover(); return; }
+  if (!id) { drawHover(); updateTextbar(null); return; }
   const el = fdoc.querySelector(`[data-wid="${id}"]`);
-  if (!el) return;
+  if (!el) { updateTextbar(null); return; }
   const r = el.getBoundingClientRect();
   const node = store.findNode(id)?.node;
   const box = document.createElement('div');
@@ -327,6 +355,17 @@ export function drawSelection() {
   label.style.left = px(r.left);
   label.style.top = px(r.top);
   overlay.append(box, label);
+  // delete affordance (top-right of selection)
+  if (node && node.id !== store.root.id) {
+    const del = document.createElement('button');
+    del.className = 'sel-del'; del.title = 'Delete';
+    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    del.style.left = (r.left + r.width) * (store.zoom || 1) - 11 + 'px';
+    del.style.top = r.top * (store.zoom || 1) - 11 + 'px';
+    del.addEventListener('pointerdown', (e) => e.stopPropagation());
+    del.addEventListener('click', (e) => { e.stopPropagation(); store.emit('request-delete', id); });
+    overlay.append(del);
+  }
   // resize handles
   ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach((h) => {
     const handle = document.createElement('div');
@@ -336,6 +375,9 @@ export function drawSelection() {
     overlay.append(handle);
   });
   drawHover();
+  // floating typography toolbar
+  const fr = frame.getBoundingClientRect(); const z = store.zoom || 1;
+  updateTextbar(node, { left: fr.left + r.left * z, top: fr.top + r.top * z, width: r.width * z, height: r.height * z }, { fwin, editing: !!editingEl });
 }
 function setRect(box, r) {
   const z = store.zoom || 1;
