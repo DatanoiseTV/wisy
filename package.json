@@ -1,0 +1,11 @@
+{
+  "name": "wisy",
+  "version": "0.1.0",
+  "description": "Wisy — a parametric visual design studio for web, desktop and audio UIs.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 5173",
+    "dev": "python3 -m http.server 5173"
+  }
+}

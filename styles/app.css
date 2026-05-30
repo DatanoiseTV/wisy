@@ -273,6 +273,7 @@ input, textarea, select { font-family: inherit; }
 .drop-marker { position: absolute; background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 1px rgba(91,140,255,.4); }
 
 .stage-empty { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.stage-empty[hidden] { display: none; }
 .stage-empty__inner { text-align: center; color: var(--txt-3); }
 .stage-empty__inner .ic { width: 34px; height: 34px; margin: 0 auto 8px; color: var(--txt-3); }
 .stage-empty__inner h3 { margin: 0 0 4px; color: var(--txt-1); font-size: 15px; }
