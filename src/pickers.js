@@ -137,10 +137,11 @@ export function openLinkPicker(anchor, current, onPick) {
 
 /* ---------------- asset picker (upload / stock / url + crop) ---------------- */
 const STOCK = {
-  photo: { label: 'Photos', build: (q, i) => `https://picsum.photos/seed/${encodeURIComponent((q || 'wisy') + i)}/600/400` },
-  avatar: { label: 'Avatars', build: (q, i) => `https://i.pravatar.cc/300?img=${(i % 70) + 1}` },
-  shape: { label: 'Avatars 2', build: (q, i) => `https://api.dicebear.com/8.x/shapes/svg?seed=${encodeURIComponent((q || 's') + i)}` },
-  fun: { label: 'Fun', build: (q, i) => `https://api.dicebear.com/8.x/fun-emoji/svg?seed=${encodeURIComponent((q || 'f') + i)}` },
+  photo: { label: 'Photos', kw: true, ph: 'Search: mountains, coffee, city…', build: (q, i) => `https://loremflickr.com/600/400/${encodeURIComponent((q || 'nature').trim().replace(/\s+/g, ',')) || 'nature'}?lock=${i + 1}` },
+  random: { label: 'Random', kw: false, ph: 'Seed (optional)…', build: (q, i) => `https://picsum.photos/seed/${encodeURIComponent((q || 'wisy') + i)}/600/400` },
+  avatar: { label: 'Avatars', kw: false, ph: 'Seed (optional)…', build: (q, i) => `https://i.pravatar.cc/300?img=${(i % 70) + 1}` },
+  shape: { label: 'Shapes', kw: true, ph: 'Seed…', build: (q, i) => `https://api.dicebear.com/8.x/shapes/svg?seed=${encodeURIComponent((q || 's') + i)}` },
+  fun: { label: 'Emoji', kw: true, ph: 'Seed…', build: (q, i) => `https://api.dicebear.com/8.x/fun-emoji/svg?seed=${encodeURIComponent((q || 'f') + i)}` },
 };
 export function openAssetPicker(anchor, current, onPick) {
   const pop = popover(anchor, 320);
@@ -167,13 +168,26 @@ export function openAssetPicker(anchor, current, onPick) {
       const cb = body.querySelector('.pk-cropbtn'); if (cb) cb.onclick = () => openCropModal(current, onPick);
     } else if (tab === 'stock') {
       body.innerHTML = `<div class="pk-stock-tabs">${Object.keys(STOCK).map((k, i) => `<button class="pk-stab${i === 0 ? ' is-active' : ''}" data-s="${k}">${STOCK[k].label}</button>`).join('')}</div>
-        <div class="pk-search"><input type="text" placeholder="Keyword / seed…" /></div><div class="pk-stockgrid"></div>`;
-      let src = 'photo';
+        <div class="pk-search"><input type="text" placeholder="${STOCK.photo.ph}" /></div>
+        <div class="pk-stocknote">Free, no account needed · click an image to use it</div><div class="pk-stockgrid"></div>`;
+      let src = 'photo', shown = 0; const BATCH = 15;
       const grid = body.querySelector('.pk-stockgrid'); const inp = body.querySelector('input');
-      const fill = () => { grid.innerHTML = ''; for (let i = 0; i < 12; i++) { const url = STOCK[src].build(inp.value, i); const b = el('button', 'pk-stockcell'); b.innerHTML = `<img src="${url}" loading="lazy" alt="">`; b.onclick = () => { onPick(url); closePop(); }; grid.append(b); } };
-      body.querySelectorAll('.pk-stab').forEach((t) => t.onclick = () => { src = t.dataset.s; body.querySelectorAll('.pk-stab').forEach((x) => x.classList.toggle('is-active', x === t)); fill(); });
-      inp.addEventListener('input', () => fill());
-      fill();
+      let fillTimer = null;
+      const addBatch = () => {
+        const frag = document.createDocumentFragment();
+        for (let k = 0; k < BATCH; k++) {
+          const i = shown + k; const url = STOCK[src].build(inp.value, i);
+          const b = el('button', 'pk-stockcell'); b.innerHTML = `<img src="${url}" loading="lazy" referrerpolicy="no-referrer" alt="">`;
+          b.onclick = () => { onPick(url); closePop(); };
+          frag.append(b);
+        }
+        shown += BATCH; grid.append(frag);
+      };
+      const reset = () => { shown = 0; grid.innerHTML = ''; addBatch(); addBatch(); };
+      grid.addEventListener('scroll', () => { if (grid.scrollTop + grid.clientHeight > grid.scrollHeight - 140) addBatch(); });
+      body.querySelectorAll('.pk-stab').forEach((t) => t.onclick = () => { src = t.dataset.s; inp.placeholder = STOCK[src].ph; body.querySelectorAll('.pk-stab').forEach((x) => x.classList.toggle('is-active', x === t)); reset(); });
+      inp.addEventListener('input', () => { clearTimeout(fillTimer); fillTimer = setTimeout(reset, 280); });
+      reset();
     } else {
       body.innerHTML = `<div class="pk-urlrow"><input class="ctl" type="text" placeholder="https://…" value="${(current || '').startsWith('data:') ? '' : (current || '')}" /></div><button class="pk-applyurl btn btn--primary" style="width:100%;justify-content:center">Use URL</button>`;
       const inp = body.querySelector('input');

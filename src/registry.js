@@ -13,6 +13,7 @@ import { makeNode } from './state.js';
 import { CHART_TYPES, chartDefaults } from './charts.js';
 import { parseEmbed } from './embeds.js';
 import { iconSVG } from './iconlib.js';
+import { markdownToHtml, looksLikeMarkdown } from './markdown.js';
 
 /* tiny hyperscript over real DOM (we're always in a browser) */
 export function h(tag, attrs, ...kids) {
@@ -165,10 +166,14 @@ def('heading', {
 def('text', {
   label: 'Text', group: 'Content', icon: 'text',
   props: [{ key: 'text', label: 'Text', type: 'textarea' }],
-  defaultProps: { text: 'Write something meaningful here. Good copy is specific, concrete, and respects the reader’s time.' },
+  defaultProps: { text: 'Write something meaningful here. Good copy is specific, concrete, and respects the reader’s time.\n\nSupports **markdown** — try `# headings`, lists, [links](#), and `code`.' },
   rich: true,
   defaultStyle: { margin: '0', color: 'var(--color-text)', 'line-height': 'var(--leading)', 'font-size': 'var(--fs-md)', 'max-width': '64ch' },
-  render: (n) => edit(h('p', { class: 'wc-text', html: n.props.text || '' }), 'text'),
+  render: (n) => {
+    const raw = n.props.text || '';
+    const html = looksLikeMarkdown(raw) ? markdownToHtml(raw) : raw;
+    return edit(h('p', { class: 'wc-text wc-prose', html }), 'text');
+  },
 });
 def('button', {
   label: 'Button', group: 'Content', icon: 'button',

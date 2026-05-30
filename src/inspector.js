@@ -8,6 +8,7 @@ import { REG, icoSvg } from './registry.js';
 import { FONT_OPTIONS } from './themes.js';
 import { iconSVG } from './iconlib.js';
 import { openIconPicker, openFontBrowser, openLinkPicker, openAssetPicker } from './pickers.js';
+import { presetsFor } from './component-presets.js';
 
 let host;
 const collapsed = new Set();
@@ -34,6 +35,8 @@ function render() {
   const def = REG[node.type];
   host.innerHTML = '';
   host.append(header(node, def));
+  const presetStrip = stylePresets(node);
+  if (presetStrip) host.append(presetStrip);
 
   // viewport scope hint
   if (store.viewport !== 'desktop') {
@@ -55,6 +58,33 @@ function render() {
   host.append(section('Background & Border', bgControls(node)));
   host.append(section('Effects', effectControls(node)));
   host.append(section('Animation', animControls(node)));
+}
+
+/* ---------- style presets strip ---------- */
+const camelToKebab = (k) => k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+function stylePresets(node) {
+  let list = presetsFor(node.type);
+  if (!list.length && node.type === 'input') list = presetsFor('wc-input');
+  if (!list || !list.length) return null;
+  const sec = document.createElement('div');
+  sec.className = 'insp-presets';
+  sec.innerHTML = '<div class="insp-presets__label">Styles</div>';
+  const strip = document.createElement('div'); strip.className = 'insp-presets__strip';
+  list.forEach((p) => {
+    const chip = document.createElement('button'); chip.type = 'button'; chip.className = 'preset-chip'; chip.textContent = p.name; chip.title = p.name;
+    chip.onclick = () => {
+      const style = {}; for (const k in (p.style || {})) style[camelToKebab(k)] = p.style[k];
+      store.transaction(() => {
+        const r = store.findNode(node.id); if (!r) return;
+        Object.assign(r.node.style.base, style);
+        if (p.props) Object.assign(r.node.props, p.props);
+      });
+      window.__wisyToast?.(`Applied “${p.name}”`, 'ok');
+    };
+    strip.append(chip);
+  });
+  sec.append(strip);
+  return sec;
 }
 
 /* ---------- header ---------- */
