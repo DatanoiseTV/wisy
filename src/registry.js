@@ -89,6 +89,7 @@ export const ICONS = {
   progress: '<rect x="3" y="10" width="18" height="4" rx="2"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor"/>',
   accordion: '<rect x="3" y="4" width="18" height="5" rx="1"/><rect x="3" y="11" width="18" height="5" rx="1"/><path d="M17 6.5h1M17 13.5h1"/>',
   logo: '<rect x="3" y="6" width="7" height="7" rx="2"/><path d="M13 8h8M13 12h5"/><path d="M5 18h14"/>',
+  tabs: '<path d="M3 9h6V5H3zM9 9h12M3 9v10h18V9"/>',
 };
 export const icoSvg = (name) => `<svg viewBox="0 0 24 24" class="ic">${ICONS[name] || ICONS.container}</svg>`;
 
@@ -431,6 +432,33 @@ def('logos', {
     const set = () => items.forEach((it) => track.append(h('span', { class: 'wc-logo' }, it)));
     set(); if (n.props.marquee) set();
     return h('div', { class: 'wc-logos' + (n.props.marquee ? ' is-marquee' : '') }, track);
+  },
+});
+def('tabs', {
+  label: 'Tabs', group: 'UI', icon: 'tabs',
+  props: [
+    { key: 'items', label: 'Tabs', type: 'list', columns: [{ label: 'Label', w: '110px' }, { label: 'Content (markdown ok)' }], addLabel: 'Add tab' },
+    { key: 'active', label: 'Active #', type: 'range', min: 1, max: 8, step: 1 },
+    { key: 'variant', label: 'Style', type: 'select', options: ['underline', 'pill', 'enclosed'] },
+  ],
+  defaultProps: { items: 'Overview|A clear summary of the essentials.\nFeatures|- Fast\n- Parametric\n- Yours to own\nPricing|Start free, upgrade anytime.', active: 1, variant: 'underline' },
+  defaultStyle: { width: '100%', 'max-width': '680px' },
+  render: (n) => {
+    const wrap = h('div', { class: `wc-tabs wc-tabs--${n.props.variant || 'underline'}` });
+    const nav = h('div', { class: 'wc-tabs__nav', role: 'tablist' });
+    const panels = h('div', { class: 'wc-tabs__panels' });
+    const active = Math.max(1, Math.min(parseInt(n.props.active, 10) || 1, 8)) - 1;
+    (n.props.items || '').split('\n').filter((l) => l.trim()).forEach((line, i) => {
+      const [label, content] = line.split('|');
+      const tab = h('button', { class: 'wc-tabs__tab' + (i === active ? ' is-active' : ''), type: 'button', role: 'tab', 'data-tab': i }, (label || '').trim());
+      nav.append(tab);
+      const body = (content || '').trim();
+      const panel = h('div', { class: 'wc-tabs__panel wc-prose' + (i === active ? ' is-active' : ''), 'data-panel': i });
+      panel.innerHTML = looksLikeMarkdown(body) ? markdownToHtml(body) : `<p>${body.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>`;
+      panels.append(panel);
+    });
+    wrap.append(nav, panels);
+    return wrap;
   },
 });
 def('accordion', {

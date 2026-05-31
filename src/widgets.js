@@ -561,4 +561,13 @@
       el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
     }
   }, true);
+
+  /* tabs */
+  document.addEventListener('click', (e) => {
+    const tab = e.target.closest('.wc-tabs__tab'); if (!tab) return;
+    const tabs = tab.closest('.wc-tabs'); if (!tabs) return;
+    const i = tab.getAttribute('data-tab');
+    tabs.querySelectorAll('.wc-tabs__tab').forEach((t) => t.classList.toggle('is-active', t === tab));
+    tabs.querySelectorAll('.wc-tabs__panel').forEach((p) => p.classList.toggle('is-active', p.getAttribute('data-panel') === i));
+  }, true);
 })();
